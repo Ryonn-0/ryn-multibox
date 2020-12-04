@@ -15,18 +15,12 @@ end
 
 function ManaLower(target,manaThreshold)
 	local manaCurrent=UnitMana(target)/UnitManaMax(target)
-	if manaCurrent<manaThreshold then
-		return true
-	end
-	return false
+	return manaCurrent<manaThreshold
 end
 
 function HpLower(target,hpThreshold)
 	local hpCurrent=UnitHealth(target)/UnitHealthMax(target)
-	if hpCurrent<hpThreshold then
-		return true
-	end
-	return false
+	return hpCurrent<hpThreshold
 end
 
 function GetSpellSlot(texture)
@@ -38,11 +32,12 @@ function GetSpellSlot(texture)
 	return nil
 end
 
+function IsCastingOrChanneling()
+	return CastingBarFrame.casting or CastingBarFrame.channeling
+end
+
 function IsValidSpellTarget(target)
-	if not UnitIsDeadOrGhost(target) and SpellCanTargetUnit(target) then
-		return true
-	end
-	return false
+	return not UnitIsDeadOrGhost(target) and SpellCanTargetUnit(target)
 end
 
 function ClearFriendlyTarget()
@@ -100,7 +95,6 @@ function GetDispelTarget(targetList,dispelSpell,dispelTypes,dispelByHp)
 end
 
 -- 7 PARAMETERS!!! YEP!!!!!!
--- TODO?: Optimize, as so the the function won't cycle through the whole raid twice in most cases. This would add a lot of complexity though, so it's probably fine like this...
 function GetHealOrDispelTarget(targetList,healSpell,hpThreshold,dispelSpell,dispelTypes,dispelByHp,dispelHpThreshold)
 	local dispelTarget,debuffType,action
 	local healTarget,minHp=GetHealTarget(targetList,healSpell,hpThreshold)
@@ -135,10 +129,7 @@ function GetActionSlots()
 end
 
 function IsActionReady(actionSlot)
-	if IsUsableAction(actionSlot) and GetActionCooldown(actionSlot)==0 then
-		return true
-	end
-	return false
+	return IsUsableAction(actionSlot) and GetActionCooldown(actionSlot)==0
 end
 
 function BuffCheck(target,buff)

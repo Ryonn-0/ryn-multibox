@@ -6,6 +6,7 @@ nameList={
 	heal={"Ryonn","Alaniel","Flo","Livia","Hoyt","Myra","Papsajt","Negreanu","Kearlah","Azure"},
 	multiheal={},
 	multidps={}
+	-- TODO: Add multibox heals and dps.
 }
 roles={"tank","heal","multiheal","multidps","dps"}
 
@@ -15,7 +16,7 @@ roles={"tank","heal","multiheal","multidps","dps"}
 -- Initialize bias list structure
 biasList={group={}}
 
--- Set global bias values
+-- Set default global bias values
 biasList.tank,biasList.heal,biasList.multiheal,biasList.multidps=-0.1,-0.08,0.1,0.15
 biasList.Cipola=10000
 
@@ -39,6 +40,8 @@ function RemoveBias(targetInfo,value)
 	end
 end
 
+-- This function should be used in SuperMacro's extended LUA code fields, to easily manage healing biases per healer.
+-- I could set biasList as a saved variable, might do it later, but since the addon doesn't have ui elements, the method above is more comfortable to use.
 function SetBias(bias,list,groupNum)
 	local oldBias
 	if list=="group" then
@@ -64,7 +67,7 @@ function SetBias(bias,list,groupNum)
 			end
 		end
 	end
-	Debug("New bias value set.")
+	--Debug("New bias value set.")
 end
 
 function GetRole(name)
@@ -149,7 +152,7 @@ function RegisterUnit(isRaid,raidOrUnitId)
 end
 
 function GroupManagementHandler()
-	Debug(event)
+	--Debug(event)
 	if not targetList then
 		BuildTargetList()
 	elseif event=="PLAYER_ENTERING_WORLD" or event=="RAID_ROSTER_UPDATE" and UnitInRaid("player") or event=="PARTY_MEMBERS_CHANGED" and not UnitInRaid("player") then
@@ -172,7 +175,7 @@ function BuildTargetList()
 		partyToRaidChack=true
 		for i=1,40 do
 			if UnitName("raid"..i)=="Unknown" then
-				Debug("Couldn't build target list. raid"..i.."'s name is unknown.")
+				--Debug("Couldn't build target list. raid"..i.."'s name is unknown.")
 				targetList=nil
 				return
 			end
@@ -182,25 +185,25 @@ function BuildTargetList()
 		partyToRaidChack=false
 		RegisterUnit(false,"player")
 		if UnitName("player")=="Unknown" then
-			Debug("Couldn't build target list. player's name is unknown.")
+			--Debug("Couldn't build target list. player's name is unknown.")
 			targetList=nil
 			return
 		end
 		for i=1,GetNumPartyMembers() do
 			RegisterUnit(false,"party"..i)
 			if UnitName("party"..i)=="Unknown" then
-				Debug("Couldn't build target list. party"..i.."'s name is unknown.")
+				--Debug("Couldn't build target list. party"..i.."'s name is unknown.")
 				targetList=nil
 				return
 			end
 		end
 	end
 	-- TODO: Put this somewhere else
-	local unitClass=_,UnitClass("player")
+	local _,unitClass=UnitClass("player")
 	if unitClass=="HUNTER" and not IsAddOnLoaded("RynMultibox_Hunter") then
 		LoadAddOn("RynMultibox_Hunter")
 	end
-	Debug("Target list built")
+	--Debug("Target list built")
 end
 
 function UpdateTargetList()
@@ -213,31 +216,31 @@ function UpdateTargetList()
 				if UnitIsConnected(uid) then
 					currentTargetInfo=targetList.all[uid]
 					if UnitName(uid)=="Unknown" then
-						Debug("Couldn't update target list. raid"..i.."'s name is unknown.")
+						--Debug("Couldn't update target list. raid"..i.."'s name is unknown.")
 						return
 					end
 					if not currentTargetInfo then
 						RegisterUnit(1,i)
-						Debug("Added new uid")
+						--Debug("Added new uid")
 					else
 						local unitName,_,unitGroup,_,_,unitClass=GetRaidRosterInfo(i)
 						if unitName~=currentTargetInfo.name then
 							UpdatePlayer(uid,currentTargetInfo,unitName,unitClass)
-							Debug("Updated player info")
+							--Debug("Updated player info")
 						end
 						if unitGroup~=currentTargetInfo.group then
 							UpdateGroup(uid,currentTargetInfo,unitGroup)
-							Debug("Updated player group")
+							--Debug("Updated player group")
 						end
 					end
 				else
 					if targetList.all[uid] then
 						RemoveUid(uid)
-						Debug("Removed unused uid")
+						--Debug("Removed unused uid")
 					end
 				end
 			end
-			Debug("Target list updated")
+			--Debug("Target list updated")
 		end
 	else
 		if partyToRaidChack then
@@ -247,29 +250,29 @@ function UpdateTargetList()
 				local uid="party"..i
 				if UnitIsConnected(uid) then
 					if UnitName(uid)=="Unknown" then
-						Debug("Couldn't update target list. party"..i.."'s name is unknown.")
+						--Debug("Couldn't update target list. party"..i.."'s name is unknown.")
 						return
 					end
 					currentTargetInfo=targetList.all[uid]
 					if not currentTargetInfo then
 						RegisterUnit(false,uid)
-						Debug("Added new uid")
+						--Debug("Added new uid")
 					else
 						local unitName=UnitName(uid)
 						local _,unitClass=UnitClass(uid)
 						if unitName~=currentTargetInfo.name then
 							UpdatePlayer(uid,currentTargetInfo,unitName,unitClass)
-							Debug("Updated player info")
+							--Debug("Updated player info")
 						end
 					end
 				else
 					if targetList.all[uid] then
 						RemoveUid(uid)
-						Debug("Removed unused uid")
+						--Debug("Removed unused uid")
 					end
 				end
 			end
-			Debug("Target list updated")
+			--Debug("Target list updated")
 		end
 	end
 end
@@ -378,9 +381,12 @@ end
 
 function PrintTargetList(targetList)
 	DEFAULT_CHAT_FRAME:AddMessage("Target list:")
+	local count=0
 	for uid,info in pairs(targetList) do
 		DEFAULT_CHAT_FRAME:AddMessage(uid.." | "..info.name.." | "..info.role.." | "..info.class.." | group"..info.group.." | "..info.bias)
+		count=count+1
 	end
+	Debug("Players in target list: "..count)
 end
 
 function PrintTargetLists()

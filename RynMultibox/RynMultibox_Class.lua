@@ -45,6 +45,8 @@ palaBuffCustom={
 -- HL: 660,580,465,365,275,190,110,60,35
 -- FOL: 140,115,90,70,50,35
 
+-- TODO: Implement interruption when the heal target is above an interruptHpThreshold value.
+
 function PalaHealTarget(target,hp)
 	if target then
 		local mana=UnitMana("player")
@@ -55,8 +57,10 @@ function PalaHealTarget(target,hp)
 			CastSpellByName("Flash of Light(Rank 5)")
 		elseif hp<0.8 and mana>=70 then
 			CastSpellByName("Flash of Light(Rank 3)")
-		else
+		elseif mana>=35 then
 			CastSpellByName("Flash of Light(Rank 1)")
+		else
+			return
 		end
 		SpellTargetUnit(target)
 	end
@@ -261,7 +265,7 @@ function WarlockDps()
 	else
 		CastSpellByName("Life Tap")
 	end
-	-- TODO: Use wand if Life Tap can not be cast or below a hp threshold.
+	-- TODO: Apply curse, use wand if Life Tap can not be cast or below a hp threshold.
 end
 
 function WarlockBuff(targetList)
@@ -331,26 +335,29 @@ end
 
 -- Holy Priest
 
-buffAbolishDisease="" -- check
+buffAbolishDisease="Interface\\Icons\\Spell_Nature_NullifyDisease"
 buffRenew="Interface\\Icons\\Spell_Holy_Renew"
 spellHeal="Interface\\Icons\\Spell_Holy_Heal02"
 
 function PriestHealTarget(target,hp)
 	if target then
-		if hp<0.3 and UnitMana("player")>=380 then
+		local mana=UnitMana("player")
+		if hp<0.3 and mana>=380 then
 			CastSpellByName("Flash Heal")
-		elseif hp<0.5 and UnitMana("player")>=215 then
+		elseif hp<0.5 and mana>=215 then
 			CastSpellByName("Flash Heal(Rank 4)")
-		elseif hp<0.6 and UnitMana("player")>=259 then
+		elseif hp<0.6 and mana>=259 then
 			CastSpellByName("Heal(Rank 4)")
-		elseif hp<0.7 and UnitMana("player")>=216 then
+		elseif hp<0.7 and mana>=216 then
 			CastSpellByName("Heal(Rank 3)")
-		elseif hp<0.8 and UnitMana("player")>=174 then
+		elseif hp<0.8 and mana>=174 then
 			CastSpellByName("Heal(Rank 2)")
-		elseif not BuffCheck(target,buffRenew) then
+		elseif not BuffCheck(target,buffRenew) and mana>=94 then
 			CastSpellByName("Renew(Rank 3)")
-		else
+		elseif mana>=131 then
 			CastSpellByName("Heal(Rank 1)")
+		else
+			return
 		end
 		SpellTargetUnit(target)
 	end
