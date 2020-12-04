@@ -1,0 +1,17 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\FrameXML\UI.xsd">
+	<Script file="RynMultibox.lua"/>
+	<Script file="RynMultibox_Group.lua"/>
+	<Script file="RynMultibox_class.lua"/>
+	<Frame name="RynMultibox_EventsFrame">
+		<Scripts>
+			<OnLoad>
+				this:RegisterEvent("PLAYER_ENTERING_WORLD")
+				this:RegisterEvent("PARTY_MEMBERS_CHANGED")
+				this:RegisterEvent("RAID_ROSTER_UPDATE")
+			</OnLoad>
+			<OnEvent>
+				GroupManagementHandler();
+			</OnEvent>
+		</Scripts>
+	</Frame>
+</Ui>
