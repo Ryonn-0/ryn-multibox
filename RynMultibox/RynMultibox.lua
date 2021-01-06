@@ -46,29 +46,32 @@ function ClearFriendlyTarget()
 	end
 end
 
-function GetHealTarget(targetList,healSpell,hpThreshold)
+-- TODO?: Might need to implement a second HoT check for druid healers.
+function GetHealTarget(targetList,healSpell,hpThreshold,healIcon)
 	ClearFriendlyTarget()
 	CastSpellByName(healSpell)
 	local currentTarget,minHp,minBiasedHp
+	local currentHotTarget,minHotHp,minBiasedHotHp
 	for target,info in pairs(targetList) do
 		local hp=UnitHealth(target)/UnitHealthMax(target)
 		if hp<hpThreshold and IsValidSpellTarget(target) then
 			local biasedHp=hp+info.bias
 			if not minHp or biasedHp<minBiasedHp then
-				minHp=hp
-				minBiasedHp=biasedHp
-				currentTarget=target
+				minHp,minBiasedHp,currentTarget=hp,biasedHp,target
+			end
+			if healIcon and (not minHotHp or biasedHp<minBiasedHp) and not BuffCheck(target,healIcon) then
+				minHotHp,minBiasedHotHp,currentHotTarget=hp,biasedHp,target
 			end
 		end
 	end
 	SpellStopTargeting()
-	return currentTarget,minHp
+	return currentTarget,minHp,currentHotTarget,minHotHp
 end
 
 function GetDispelTarget(targetList,dispelSpell,dispelTypes,dispelByHp)
 	ClearFriendlyTarget()
 	CastSpellByName(dispelSpell)
-	local currentTarget,topPriority,debuffType
+	local currentTarget,topPriority,debuffType,currentDebuffType
 	for target,info in pairs(targetList) do
 		if IsValidSpellTarget(target) then
 			for i=1,16 do
@@ -85,19 +88,21 @@ function GetDispelTarget(targetList,dispelSpell,dispelTypes,dispelByHp)
 				if not topPriority or priority<topPriority then
 					topPriority=priority
 					currentTarget=target
+					currentDebuffType=debuffType
 				end
 			end
 		end
 	end
 	SpellStopTargeting()
-	return currentTarget,debuffType
+	return currentTarget,currentDebuffType
 	-- TODO: Check the amount of debuffs on a player and maybe priorities by debuff type. Will be important for Chromaggus.
+	-- TODO: Implement check for abolish effects (priest Abolish Disease, Druid abolish poison, Restorative Poison, etc...)
 end
 
--- 7 PARAMETERS!!! YEP!!!!!!
-function GetHealOrDispelTarget(targetList,healSpell,hpThreshold,dispelSpell,dispelTypes,dispelByHp,dispelHpThreshold)
+-- EIGHT PARAMETERS!!! YEP!!!!!!!!!!!!!!!!44444four
+function GetHealOrDispelTarget(targetList,healSpell,healIcon,hpThreshold,dispelSpell,dispelTypes,dispelByHp,dispelHpThreshold)
 	local dispelTarget,debuffType,action
-	local healTarget,minHp=GetHealTarget(targetList,healSpell,hpThreshold)
+	local healTarget,minHp,healHotTarget,minHotHp=GetHealTarget(targetList,healSpell,hpThreshold,healIcon)
 	if not healTarget or minHp>dispelHpThreshold then
 		dispelTarget,debuffType=GetDispelTarget(targetList,dispelSpell,dispelTypes,dispelByHp)
 		if dispelTarget then
@@ -109,9 +114,9 @@ function GetHealOrDispelTarget(targetList,healSpell,hpThreshold,dispelSpell,disp
 		action="heal"
 	end
 	if action=="heal" then
-		return healTarget,minHp,action
+		return healTarget,minHp,healHotTarget,minHotHp,action
 	end
-	return dispelTarget,debuffType,action
+	return dispelTarget,debuffType,nil,nil,action
 end
 
 function GetActionSlots()
@@ -147,6 +152,10 @@ function CheckRaidIcon(target,icon)
 	return UnitExists(target) and not UnitIsDead(target) and GetRaidTargetIndex(target)==icon
 end
 
+function IsCastingOrChanelling()
+	return CastingBarFrame.casting or CastingBarFrame.channeling
+end
+
 function TryTargetRaidIcon(icon,tabCount,tankTargetCheck)
 	if not CheckRaidIcon("target",icon) then
 		if tankTargetCheck then
@@ -177,9 +186,11 @@ function Dps(ClassDps)
 			ClassDps()
 		end
 	elseif dpsMode==2 then
-		AssistUnit(masterTarget)
-		if UnitExists(target) and UnitCanAttack("player","target") then
-			ClassDps()
+		if masterTarget then
+			AssistUnit(masterTarget)
+			if UnitExists("target") and UnitCanAttack("player","target") then
+				ClassDps()
+			end
 		end
 	end
 end

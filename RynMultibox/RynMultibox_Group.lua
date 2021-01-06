@@ -1,8 +1,8 @@
 -- Group management
 
-masterName="Alaniel"
+masterName="Harklen"
 nameList={
-	tank={"Harklen","Gaelber","Llanewrynn","Stardancer","Cooperbeard","Naderius","Dobzse","Obier","Nyavalyás"},
+	tank={"Harklen","Gaelber","Llanewrynn","Stardancer","Cooperbeard","Naderius","Dobzse","Obier","Nyavalyás","Lothbrok"},
 	heal={"Ryonn","Alaniel","Flo","Livia","Hoyt","Myra","Papsajt","Negreanu","Kearlah","Azure"},
 	multiheal={},
 	multidps={}
@@ -147,6 +147,7 @@ function RegisterUnit(isRaid,raidOrUnitId)
 			targetList.master={}
 			targetList.master[uid]=targetInfo
 			AddBias(targetInfo,biasList.master)
+			masterTarget=uid
 		end
 	end
 end
@@ -203,6 +204,7 @@ function BuildTargetList()
 	if unitClass=="HUNTER" and not IsAddOnLoaded("RynMultibox_Hunter") then
 		LoadAddOn("RynMultibox_Hunter")
 	end
+	InitHealProfiles()
 	--Debug("Target list built")
 end
 
@@ -311,6 +313,7 @@ function UpdatePlayer(uid,info,name,class)
 		if name==masterName then
 			targetList.master[uid]=info
 			AddBias(info,biasList.master)
+			masterTarget=uid
 		elseif oldName==masterName then
 			targetList.master[uid]=nil
 			RemoveBias(info,biasList.master)
