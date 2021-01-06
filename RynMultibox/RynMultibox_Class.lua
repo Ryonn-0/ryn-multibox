@@ -426,6 +426,7 @@ buffInnerFocus="Interface\\Icons\\Spell_Frost_WindWalkOn"
 spellHeal="Interface\\Icons\\Spell_Holy_Heal02"
 
 function PriestHealTarget(healProfile,target,hp,hotTarget,hotHp,aoeInfo)
+	local aoeHealMinPlayers=3
 	if target and priestHealProfiles[healProfile] then
 		for i,healProfileEntry in ipairs(priestHealProfiles[healProfile]) do
 			local hpThreshold,manaCost,spellName,spellType,targetList,withCdOnly=unpack(healProfileEntry)
@@ -442,7 +443,7 @@ function PriestHealTarget(healProfile,target,hp,hotTarget,hotHp,aoeInfo)
 					CastSpellByName(spellName)
 					SpellTargetUnit(target)
 					break
-				elseif spellType==2 and aoeInfo[1] and aoeInfo[1].hpRatio<hpThreshold then
+				elseif spellType==2 and aoeInfo[aoeHealMinPlayers] and aoeInfo[aoeHealMinPlayers].hpRatio<hpThreshold then
 					--Debug("Executing heal profile \""..healProfile.."\", entry: "..i)
 					CastSpellByName(spellName)
 					break
