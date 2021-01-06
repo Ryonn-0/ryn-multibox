@@ -463,15 +463,18 @@ function PriestHeal(targetList,healProfile,hpThreshold)
 end
 
 function PriestAoeInfo(hpThreshold)
+	ClearFriendlyTarget()
+	CastSpellByName("Dispel Magic")
 	hpThreshold=hpThreshold or 0.9
 	local playerCount,playerHps=0,{}
 	for target,info in pairs(targetList.party) do
 		local hp=UnitHealth(target)/UnitHealthMax(target)
-		if hp<hpThreshold then
+		if hp<hpThreshold and IsValidSpellTarget(target) then
 			playerCount=playerCount+1
 			playerHps[playerCount]={uid=target,hpRatio=hp}
 		end
 	end
+	SpellStopTargeting()
 	table.sort(playerHps,function(a,b) return a.hpRatio<b.hpRatio end)
 	return playerHps
 end
