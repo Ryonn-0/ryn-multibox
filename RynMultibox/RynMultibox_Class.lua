@@ -107,6 +107,10 @@ function InitHealProfiles()
 			{0.4,0,"Inner Focus",2},
 			{0.4,0,"Prayer of Healing",2,false,true},
 			{0.8,410,"Prayer of Healing(Rank 1)",2}
+		},
+		UNLIMITEDPOWER={
+			{1,0,"Prayer of Healing",2},
+			{1,0,"Flash Heal"}
 		}
 	}
 end
@@ -308,14 +312,22 @@ druidDispelCurse={Curse=true}
 function DruidDispel(targetList)
 	local target,debuffType=GetDispelTarget(targetList,"Thorns",druidDispelAll,false)
 	if target then
-		if debuffType=="Curse" then
-			CastSpellByName("Remove Curse")
-		elseif not BuffCheck(target,buffAbolishPoison) then
-			CastSpellByName("Abolish Poison")
+		if IsMoonkin() then
+			CastShapeshiftForm(5)
+			return
 		else
-			CastSpellByName("Cure Poison")
+			if debuffType=="Curse" then
+				CastSpellByName("Remove Curse")
+			elseif not BuffCheck(target,buffAbolishPoison) then
+				CastSpellByName("Abolish Poison")
+			else
+				CastSpellByName("Cure Poison")
+			end
+			SpellTargetUnit(target)
 		end
-		SpellTargetUnit(target)
+	end
+	if not IsMoonkin() then
+		CastShapeshiftForm(5)
 	end
 end
 
@@ -328,6 +340,7 @@ buffSoulstone="Interface\\Icons\\Spell_Shadow_SoulGem"
 function WarlockDps()
 	if not IsCastingOrChanelling() then
 		if UnitMana("player")>=372 then
+		--if UnitMana("player")>=2000 then
 			CastSpellByName("Shadow Bolt")
 		else
 			CastSpellByName("Life Tap")
@@ -360,7 +373,7 @@ function WarlockBuff(targetList)
 end
 
 function WarlockCC()
-	if not IsCastingOrChanelling() and TryTargetRaidIcon(3,10,true) then
+	if not IsCastingOrChanelling() and TryTargetRaidIcon(2,10,true) then
 		local unitType=UnitCreatureType("target")
 		if UnitMana("player")>=200 and (unitType=="Elemental" or unitType=="Demon") then
 			CastSpellByName("Banish")
@@ -375,7 +388,7 @@ end
 function WarlockDrainSoul()
 	if not IsCastingOrChanelling() then
 		if HpLower("target",0.3) then
-			if UnitMana("player")>=290 then 
+			if UnitMana("player")>=290 then
 				CastSpellByName("Drain Soul")
 			else
 				CastSpellByName("Life Tap")
@@ -395,7 +408,10 @@ end
 spellRemoveLesserCurse="Interface\\Icons\\Spell_Nature_RemoveCurse"
 
 function MageDps()
-	CastSpellByName("Frostbolt")
+	if not IsCastingOrChanelling() then
+		CastSpellByName("Frostbolt")
+		--CastSpellByName("Fireball")
+	end
 	-- TODO: Evocation, mana gem and wanding.
 end
 
@@ -464,7 +480,7 @@ end
 
 function PriestAoeInfo(hpThreshold)
 	ClearFriendlyTarget()
-	CastSpellByName("Dispel Magic")
+	CastSpellByName("Cure Disease")
 	hpThreshold=hpThreshold or 0.9
 	local playerCount,playerHps=0,{}
 	for target,info in pairs(targetList.party) do
@@ -499,7 +515,7 @@ end
 function PriestDispel(targetList,dispelTypes,dispelByHp)
 	dispelTypes=dispelTypes or priestDispelAll
 	dispelByHp=dispelByHp or false
-	local target,debuffType=GetDispelTarget(targetList,"Dispel Magic",priestDispelAll,false)
+	local target,debuffType=GetDispelTarget(targetList,"Cure Disease",priestDispelAll,false)
 	PriestDispelTarget(target,debuffType)
 end
 
@@ -509,7 +525,7 @@ function PriestHealOrDispel(targetList,healProfile,hpThreshold,dispelTypes,dispe
 	dispelTypes=dispelTypes or priestDispelAll
 	dispelByHp=dispelByHp or false
 	dispelHpThreshold=dispelHpThreshold or 0.4
-	local target,hpOrDebuffType,hotTarget,hotHp,action=GetHealOrDispelTarget(targetList,"Heal",buffRenew,hpThreshold,"Dispel Magic",dispelTypes,dispelByHp,dispelHpThreshold)
+	local target,hpOrDebuffType,hotTarget,hotHp,action=GetHealOrDispelTarget(targetList,"Heal",buffRenew,hpThreshold,"Cure Disease",dispelTypes,dispelByHp,dispelHpThreshold)
 	if action=="heal" then
 		PriestHealTarget(healProfile,target,hpOrDebuffType,hotTarget,hotHp)
 	else

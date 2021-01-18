@@ -2,7 +2,7 @@
 
 masterName="Harklen"
 nameList={
-	tank={"Harklen","Gaelber","Llanewrynn","Stardancer","Cooperbeard","Naderius","Dobzse","Obier","Nyavalyás","Lothbrok"},
+	tank={"Harklen","Gaelber","Llanewrynn","Stardancer","Cooperbeard","Naderius","Dobzse","Obier","Nyavalyás"},
 	heal={"Ryonn","Alaniel","Flo","Livia","Hoyt","Myra","Papsajt","Negreanu","Kearlah","Azure"},
 	multiheal={},
 	multidps={}
