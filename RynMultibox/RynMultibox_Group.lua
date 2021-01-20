@@ -205,6 +205,7 @@ function BuildTargetList()
 		LoadAddOn("RynMultibox_Hunter")
 	end
 	InitHealProfiles()
+	BuildSpellData()
 	--Debug("Target list built")
 end
 

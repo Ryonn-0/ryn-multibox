@@ -42,6 +42,8 @@ palaBuffCustom={
 	Alaniel={"Blessing of Wisdom",buffWisdom},
 	Arvene={"Blessing of Wisdom",buffWisdom}
 }
+palaHealRange="Holy Light"
+palaDispelRange="Purify"
 
 function InitHealProfiles()
 	-- NOTE: Do NOT use nil if you want to omit a heal profile entry parameter, use false instead.
@@ -62,8 +64,8 @@ function InitHealProfiles()
 			{0.4,720,"Divine Favor",targetList.tank},
 			{0.4,660,"Holy Light",targetList.tank},
 			{0.6,140,"Flash of Light"},
-			{0.8,90,"Flash of Light(Rank 4)"},
-			{1,50,"Flash of Light(Rank 2)"}
+			{0.8,70,"Flash of Light(Rank 3)"},
+			{1,35,"Flash of Light(Rank 1)"}
 		},
 		low={
 			{0.4,720,"Divine Favor",targetList.tank},
@@ -84,6 +86,10 @@ function InitHealProfiles()
 	-- TODO: spellType is redundant, make a function that deduces this info from spellName instead
 	priestHealProfiles={
 		regular={
+			{0.4,380,"Flash Heal",targetList.tank},
+			{0.5,0,"Inner Focus",2},
+			{0.5,0,"Prayer of Healing",2,false,true},
+			{0.8,410,"Prayer of Healing(Rank 1)",2},
 			{0.3,380,"Flash Heal"},
 			{0.5,215,"Flash Heal(Rank 4)"},
 			{0.6,259,"Heal(Rank 4)"},
@@ -94,6 +100,9 @@ function InitHealProfiles()
 		},
 		renewSpam={
 			{0.4,380,"Flash Heal",targetList.tank},
+			{0.5,0,"Inner Focus",2},
+			{0.5,0,"Prayer of Healing",2,false,true},
+			{0.8,410,"Prayer of Healing(Rank 1)",2},
 			{0.4,259,"Heal(Rank 4)"},
 			{0.6,184,"Renew(Rank 6)",1},
 			{1,94,"Renew(Rank 3)",1},
@@ -102,11 +111,6 @@ function InitHealProfiles()
 		pureRenewSpam={
 			{0.6,184,"Renew(Rank 6)",1},
 			{1,94,"Renew(Rank 3)",1}
-		},
-		aoeTest={
-			{0.4,0,"Inner Focus",2},
-			{0.4,0,"Prayer of Healing",2,false,true},
-			{0.8,410,"Prayer of Healing(Rank 1)",2}
 		},
 		UNLIMITEDPOWER={
 			{1,0,"Prayer of Healing",2},
@@ -123,7 +127,8 @@ function PalaHealTarget(healProfile,target,hp)
 			local hpThreshold,manaCost,spellName,targetList,withCdOnly=unpack(healProfileEntry)
 			local mana=UnitMana("player")
 			if hp<hpThreshold and mana>=manaCost and (not targetList or targetList[target]) and (not withCdOnly or BuffCheck("player",buffDivineFavor))
-			and (spellName~="Divine Favor" or GetActionCooldown(9)==0) then -- TODO: Haxx, make something that works for all spell cooldonws
+			--and (spellName~="Divine Favor" or GetActionCooldown(9)==0) then -- TODO: Haxx, make something that works for all spell cooldonws
+			and GetSpellCooldownByName(spellName)==0 then
 				--Debug("Executing heal profile \""..healProfile.."\", entry: "..i)
 				CastSpellByName(spellName)
 				SpellTargetUnit(target)
@@ -136,7 +141,7 @@ end
 function PalaHeal(targetList,healProfile,hpThreshold)
 	healProfile=healProfile or "regular"
 	hpThreshold=hpThreshold or 0.9
-	local target,hp=GetHealTarget(targetList,"Flash of Light",hpThreshold)
+	local target,hp=GetHealTarget(targetList,palaHealRange,hpThreshold)
 	PalaHealTarget(healProfile,target,hp)
 end
 
@@ -158,7 +163,7 @@ end
 function PalaDispel(targetList,dispelTypes,dispelByHp)
 	dispelTypes=dispelTypes or palaDispelAll
 	dispelByHp=dispelByHp or false
-	local target=GetDispelTarget(targetList,"Cleanse",dispelTypes,dispelByHp)
+	local target=GetDispelTarget(targetList,palaDispelRange,dispelTypes,dispelByHp)
 	PalaDispelTarget(target)
 end
 
@@ -168,7 +173,7 @@ function PalaHealOrDispel(targetList,healProfile,hpThreshold,dispelTypes,dispelB
 	dispelTypes=dispelTypes or palaDispelAll
 	dispelByHp=dispelByHp or false
 	dispelHpThreshold=dispelHpThreshold or 0.4
-	local target,hpOrDebuffType,_,_,action=GetHealOrDispelTarget(targetList,"Flash of Light",nil,hpThreshold,"Cleanse",dispelTypes,dispelByHp,dispelHpThreshold)
+	local target,hpOrDebuffType,_,_,action=GetHealOrDispelTarget(targetList,palaHealRange,nil,hpThreshold,palaDispelRange,dispelTypes,dispelByHp,dispelHpThreshold)
 	if action=="heal" then
 		PalaHealTarget(healProfile,target,hpOrDebuffType)
 	else
@@ -243,6 +248,8 @@ buffAquaticForm="Interface\\Icons\\Ability_Druid_AquaticForm"
 buffAbolishPoison="Interface\\Icons\\Spell_Nature_NullifyPoison_02"
 spellRemoveCurse="Interface\\Icons\\Spell_Holy_RemoveCurse"
 
+druidDispelRange="Thorns"
+
 function DruidDps()
 	CastSpellByName("Starfire")
 end
@@ -310,7 +317,7 @@ druidDispelPoison={Poison=true}
 druidDispelCurse={Curse=true}
 
 function DruidDispel(targetList)
-	local target,debuffType=GetDispelTarget(targetList,"Thorns",druidDispelAll,false)
+	local target,debuffType=GetDispelTarget(targetList,druidDispelRange,druidDispelAll,false)
 	if target then
 		if IsMoonkin() then
 			CastShapeshiftForm(5)
@@ -407,6 +414,8 @@ end
 
 spellRemoveLesserCurse="Interface\\Icons\\Spell_Nature_RemoveCurse"
 
+mageDispelRange="Remove Lesser Curse"
+
 function MageDps()
 	if not IsCastingOrChanelling() then
 		CastSpellByName("Frostbolt")
@@ -418,7 +427,7 @@ end
 mageDispel={Curse=true}
 
 function MageDispel(targetList)
-	local target=GetDispelTarget(targetList,"Remove Lesser Curse",mageDispel,false)
+	local target=GetDispelTarget(targetList,mageDispelRange,mageDispel,false)
 	if target then
 		CastSpellByName("Remove Lesser Curse")
 		SpellTargetUnit(target)
@@ -441,6 +450,9 @@ buffRenew="Interface\\Icons\\Spell_Holy_Renew"
 buffInnerFocus="Interface\\Icons\\Spell_Frost_WindWalkOn"
 spellHeal="Interface\\Icons\\Spell_Holy_Heal02"
 
+priestHealRange="Heal"
+priestDispelRange="Cure Disease"
+
 function PriestHealTarget(healProfile,target,hp,hotTarget,hotHp,aoeInfo)
 	local aoeHealMinPlayers=3
 	if target and priestHealProfiles[healProfile] then
@@ -448,7 +460,8 @@ function PriestHealTarget(healProfile,target,hp,hotTarget,hotHp,aoeInfo)
 			local hpThreshold,manaCost,spellName,spellType,targetList,withCdOnly=unpack(healProfileEntry)
 			local mana=UnitMana("player")
 			if mana>=manaCost and (not targetList or targetList[target]) and (not withCdOnly or BuffCheck("player",buffInnerFocus)) 
-			and (spellName~="Inner Focus" or GetActionCooldown(57)==0) then -- TODO: Haxx, see PalaHealTarget...
+			--and (spellName~="Inner Focus" or GetActionCooldown(57)==0) then -- TODO: Haxx, see PalaHealTarget...
+			and GetSpellCooldownByName(spellName)==0 then
 				if spellType==1 and hotTarget and hotHp<hpThreshold then
 					--Debug("Executing heal profile \""..healProfile.."\", entry: "..i)
 					CastSpellByName(spellName)
@@ -472,7 +485,7 @@ end
 function PriestHeal(targetList,healProfile,hpThreshold)
 	healProfile=healProfile or "regular"
 	hpThreshold=hpThreshold or 0.9
-	local target,hp,hotTarget,hotHp=GetHealTarget(targetList,"Heal",hpThreshold,buffRenew)
+	local target,hp,hotTarget,hotHp=GetHealTarget(targetList,priestHealRange,hpThreshold,buffRenew)
 	local aoeInfo=PriestAoeInfo(hpThreshold)
 	PriestHealTarget(healProfile,target,hp,hotTarget,hotHp,aoeInfo)
 	-- TODO: Aoe heal support
@@ -515,7 +528,7 @@ end
 function PriestDispel(targetList,dispelTypes,dispelByHp)
 	dispelTypes=dispelTypes or priestDispelAll
 	dispelByHp=dispelByHp or false
-	local target,debuffType=GetDispelTarget(targetList,"Cure Disease",priestDispelAll,false)
+	local target,debuffType=GetDispelTarget(targetList,priestDispelRange,priestDispelAll,false)
 	PriestDispelTarget(target,debuffType)
 end
 
@@ -525,7 +538,7 @@ function PriestHealOrDispel(targetList,healProfile,hpThreshold,dispelTypes,dispe
 	dispelTypes=dispelTypes or priestDispelAll
 	dispelByHp=dispelByHp or false
 	dispelHpThreshold=dispelHpThreshold or 0.4
-	local target,hpOrDebuffType,hotTarget,hotHp,action=GetHealOrDispelTarget(targetList,"Heal",buffRenew,hpThreshold,"Cure Disease",dispelTypes,dispelByHp,dispelHpThreshold)
+	local target,hpOrDebuffType,hotTarget,hotHp,action=GetHealOrDispelTarget(targetList,priestHealRange,buffRenew,hpThreshold,priestDispelRange,dispelTypes,dispelByHp,dispelHpThreshold)
 	if action=="heal" then
 		PriestHealTarget(healProfile,target,hpOrDebuffType,hotTarget,hotHp)
 	else
