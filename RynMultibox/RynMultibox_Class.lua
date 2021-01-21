@@ -86,7 +86,7 @@ function InitHealProfiles()
 	-- TODO: spellType is redundant, make a function that deduces this info from spellName instead
 	priestHealProfiles={
 		regular={
-			{0.4,380,"Flash Heal",targetList.tank},
+			{0.4,380,"Flash Heal",false,targetList.tank},
 			{0.5,0,"Inner Focus",2},
 			{0.5,0,"Prayer of Healing",2,false,true},
 			{0.8,410,"Prayer of Healing(Rank 1)",2},
@@ -99,7 +99,7 @@ function InitHealProfiles()
 			{1,131,"Heal(Rank 1)"}
 		},
 		renewSpam={
-			{0.4,380,"Flash Heal",targetList.tank},
+			{0.4,380,"Flash Heal",false,targetList.tank},
 			{0.5,0,"Inner Focus",2},
 			{0.5,0,"Prayer of Healing",2,false,true},
 			{0.8,410,"Prayer of Healing(Rank 1)",2},
