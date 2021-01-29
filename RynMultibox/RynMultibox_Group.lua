@@ -2,26 +2,38 @@
 
 masterName="Harklen"
 nameList={
-	tank={"Harklen","Gaelber","Llanewrynn","Stardancer","Cooperbeard","Naderius","Dobzse","Obier","Nyavalyás"},
-	heal={"Ryonn","Alaniel","Flo","Livia","Hoyt","Myra","Papsajt","Negreanu","Kearlah","Azure"},
-	multiheal={},
-	multidps={}
-	-- TODO: Add multibox heals and dps.
+	tank={"Harklen","Gaelber","Llanewrynn","Stardancer","Cooperbeard","Naderius","Dobzse","Obier","Yxon","Amonstenn","Fierileya"},
+	heal={"Alaniel","Flo","Livia","Hoyt","Myra","Papsajt","Negreanu","Kearlah","Azure","Warrógép","Rhodelya"},
+	multiHeal={
+	"Paladino","Dreamblast","Skyx","Uyalin","Illumyn", -- Kearlah
+	"Baleog","Lionel","Nobleforged","Lightbeard","Moonflower","Bronzecoat", -- Azsgrof
+	"Pamelma" -- Dobzse
+	},
+	multiDps={
+	"Dorothy","Tygerra","Havox","Eoro","Livingbomb","Dorkilla","Reimus","Necropoly","Vibranium","Lazarrus","Skyfire", -- Kearlah
+	"Azsgrof","Liberton","Leilena","Cromwell","Daemona","Carla","Windou","Jaliana","Fabregas","Pinkypie","Oakheart","Featherfire","Pompedous","Miraclemike","Morbent","Maleficus","Nightleaf","Ravencloud", -- Azsgrof
+	"Aedis","Therena","Nien","Lucilde" -- Dobzse
+	},
+	myMultiHeal={"Ryonn"},
+	myMultiDps={"Arvene","Nymira","Inochi","Seloris"}
 }
-roles={"tank","heal","multiheal","multidps","dps"}
+roles={"tank","heal","multiHeal","multiDps","myMultiHeal","myMultiDps","dps"}
 
--- targetLists: {all,tank,heal,dps(default),multiheal,multidps,party,group<1-8>,<charname>,master,self}   TODO: assist?,class,custom<any>?
+-- targetLists: {all,tank,heal,dps(default),multiHeal,multiDps,myMultiHeal,myMultiDps,party,group<1-8>,<charname>,master,self}   TODO: assist?,class,custom<any>?
 -- playerInfo: uid -> {name,role,class,group,bias}
 
 -- Initialize bias list structure
 biasList={group={}}
 
 -- Set default global bias values
-biasList.tank,biasList.heal,biasList.multiheal,biasList.multidps=-0.1,-0.08,0.1,0.15
+biasList.tank,biasList.heal,biasList.multiHeal,biasList.multiDps,biasList.myMultiHeal,biasList.myMultiDps=-0.1,-0.07,0.1,0.15,-0.05,-0.02
 biasList.Cipola=10000
+biasList.Harklen=-0.06
+biasList.Alaniel=-0.02
+biasList.self=-0.05
 
 -- Test values
---biasList.tank,biasList.heal,biasList.dps,biasList.multiheal,biasList.multidps=0.1,0.2,0.3,0.4,0.5
+--biasList.tank,biasList.heal,biasList.dps,biasList.multiHeal,biasList.multiDps,biasList.myMultiHeal,biasList.myMultiDps=0.1,0.2,0.3,0.4,0.5,0.6,0.7
 --biasList.self=0.01
 --biasList.master=0.001
 --biasList.group={1,2,3,4,5,6,7,8}
@@ -414,8 +426,8 @@ end
 function PrintPlayerLists()
 	local tlCount,realTlCount=0,0
 	for listName,list in pairs(targetList) do
-		if listName~="all" and listName~="group" and listName~="party" and listName~="master" and listName~="self"
-		and listName~="tank" and listName~="heal" and listName~="dps" and listName~="multiheal" and listName~="multidps" then
+		local firstChar=string.sub(listName,1,1)
+		if firstChar==string.upper(firstChar) then
 			DEFAULT_CHAT_FRAME:AddMessage("Target list ["..listName.."]:")
 			tlCount=tlCount+1
 			for uid,info in pairs(list) do

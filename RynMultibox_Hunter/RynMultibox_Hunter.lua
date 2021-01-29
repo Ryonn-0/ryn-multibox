@@ -6,8 +6,8 @@ debuffMark="Interface\\Icons\\Ability_Hunter_SniperShot"
 
 -- Settings
 multiShotEnabled=true
-aimedShotWindow=0.5 -- low value, with 3.0+ ranged attack speed (full/auto shot rotation), or a higher value with 2.9- ranged attack speed (clipped/aimed shot rotation)
-multiShotWindow=2.3 -- should be around ranged attack speed minus 1
+aimedShotWindow=1 -- low value, with 3.0+ ranged attack speed (full/auto shot rotation), or a higher value with 2.9- ranged attack speed (clipped/aimed shot rotation)
+multiShotWindow=1.6 -- should be around ranged attack speed minus 1
 
 -- Action bar slot ids
 aimedShotActionSlot=1
