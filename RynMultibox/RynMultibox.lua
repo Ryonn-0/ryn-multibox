@@ -4,6 +4,14 @@ buffSecondWind="Interface\\Icons\\INV_Jewelry_Talisman_06"
 dpsMode=1
 -- 1: Skull/cross targeting
 -- 2: Master assist targeting (with skull/cross target lock if applied)
+precastInterruptWindow=1
+healInterruptThreshold=0.95
+stopCastingDelay=0.5
+
+stopCastingDelayExpire=nil
+currentHealTarget=nil
+currentHealFinish=nil
+precastHpThreshold=nil
 
 function Debug(message)
 	if message==nil then
@@ -47,14 +55,14 @@ function ClearFriendlyTarget()
 end
 
 -- TODO?: Might need to implement a second HoT check for druid healers.
-function GetHealTarget(targetList,healSpell,hpThreshold,healIcon)
+function GetHealTarget(targetList,healSpell,healIcon)
 	ClearFriendlyTarget()
 	CastSpellByName(healSpell)
 	local currentTarget,minHp,minBiasedHp
 	local currentHotTarget,minHotHp,minBiasedHotHp
 	for target,info in pairs(targetList) do
 		local hp=UnitHealth(target)/UnitHealthMax(target)
-		if hp<hpThreshold and IsValidSpellTarget(target) then
+		if IsValidSpellTarget(target) then
 			local biasedHp=hp+info.bias
 			if not minHp or biasedHp<minBiasedHp then
 				minHp,minBiasedHp,currentTarget=hp,biasedHp,target
@@ -99,10 +107,10 @@ function GetDispelTarget(targetList,dispelSpell,dispelTypes,dispelByHp)
 	-- TODO: Implement check for abolish effects (priest Abolish Disease, Druid abolish poison, Restorative Poison, etc...)
 end
 
--- EIGHT PARAMETERS!!! YEP!!!!!!!!!!!!!!!!44444four
-function GetHealOrDispelTarget(targetList,healSpell,healIcon,hpThreshold,dispelSpell,dispelTypes,dispelByHp,dispelHpThreshold)
+-- SEVEN PARAMETERS!!! YEP!!!!!!!!!!!!!!!!44444four
+function GetHealOrDispelTarget(targetList,healSpell,healIcon,dispelSpell,dispelTypes,dispelByHp,dispelHpThreshold)
 	local dispelTarget,debuffType,action
-	local healTarget,minHp,healHotTarget,minHotHp=GetHealTarget(targetList,healSpell,hpThreshold,healIcon)
+	local healTarget,minHp,healHotTarget,minHotHp=GetHealTarget(targetList,healSpell,healIcon)
 	if not healTarget or minHp>dispelHpThreshold then
 		dispelTarget,debuffType=GetDispelTarget(targetList,dispelSpell,dispelTypes,dispelByHp)
 		if dispelTarget then
@@ -117,6 +125,26 @@ function GetHealOrDispelTarget(targetList,healSpell,healIcon,hpThreshold,dispelS
 		return healTarget,minHp,healHotTarget,minHotHp,action
 	end
 	return dispelTarget,debuffType,nil,nil,action
+end
+
+function HealInterrupt(target,finish,hpThreshold)
+	if not stopCastingDelayExpire then
+		if target=="targettarget" then -- Precast
+			if not (CheckRaidIcon("target",8) or CheckRaidIcon("target",7)) or
+			not UnitExists(target) or not UnitIsFriend("player",target) or
+			finish-precastInterruptWindow<GetTime() and not HpLower(target,hpThreshold) then
+				SpellStopCasting()
+				--Debug("Precast interrupt!")
+				stopCastingDelayExpire=GetTime()+stopCastingDelay
+			end
+		elseif target then -- Overheal prevention
+			if UnitExists(target) and not HpLower(target,healInterruptThreshold) then
+				SpellStopCasting()
+				--Debug("Overheal interrupt!")
+				stopCastingDelayExpire=GetTime()+stopCastingDelay
+			end
+		end
+	end
 end
 
 function GetActionSlots()
@@ -154,6 +182,10 @@ end
 
 function IsCastingOrChanelling()
 	return CastingBarFrame.casting or CastingBarFrame.channeling
+end
+
+function SpellCastReady(spell,delay)
+	return not IsCastingOrChanelling() and GetSpellCooldownByName(spell)==0 and (not delay or delay<GetTime())
 end
 
 function TryTargetRaidIcon(icon,tabCount,tankTargetCheck)
