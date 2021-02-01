@@ -68,7 +68,7 @@ function GetHealTarget(targetList,healSpell,healIcon)
 			if not minHp or biasedHp<minBiasedHp then
 				minHp,minBiasedHp,currentTarget=hp,biasedHp,target
 			end
-			if healIcon and (not minHotHp or biasedHp<minBiasedHp) and not BuffCheck(target,healIcon) then
+			if healIcon and (not minHotHp or biasedHp<minBiasedHotHp) and not BuffCheck(target,healIcon) then
 				minHotHp,minBiasedHotHp,currentHotTarget=hp,biasedHp,target
 			end
 		end
