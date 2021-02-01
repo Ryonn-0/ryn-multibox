@@ -149,7 +149,7 @@ function PalaHealTarget(healProfile,target,hp)
 			local hpThreshold,manaCost,spellName,healMode,targetList,withCdOnly=unpack(healProfileEntry)
 			local mana=UnitMana("player")
 			if mana>=manaCost and (not withCdOnly or BuffCheck("player",buffDivineFavor)) and GetSpellCooldownByName(spellName)==0 then
-				if (not healMode or healMode==1) and hp<hpThreshold and (not targetList or targetList[target]) then
+				if (not healMode or healMode==1) and target and hp<hpThreshold and (not targetList or targetList[target]) then
 					--Debug("Executing heal profile \""..healProfile.."\", entry: "..i)
 					currentHealTarget=target
 					CastSpellByName(spellName)
@@ -505,7 +505,7 @@ function PriestHealTarget(healProfile,target,hp,hotTarget,hotHp,aoeInfo)
 			local hpThreshold,manaCost,spellName,healMode,targetList,withCdOnly=unpack(healProfileEntry)
 			local mana=UnitMana("player")
 			if mana>=manaCost and (not withCdOnly or BuffCheck("player",buffInnerFocus)) and GetSpellCooldownByName(spellName)==0 then
-				if (not healMode or healMode==1) and hp<hpThreshold and (not targetList or targetList[target]) then
+				if (not healMode or healMode==1) and target and hp<hpThreshold and (not targetList or targetList[target]) then
 					--Debug("Executing heal profile \""..healProfile.."\", entry: "..i)
 					currentHealTarget=target
 					CastSpellByName(spellName)

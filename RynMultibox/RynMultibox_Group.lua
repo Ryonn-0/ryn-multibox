@@ -17,7 +17,6 @@ nameList={
 	myMultiHeal={"Ryonn"},
 	myMultiDps={"Arvene","Nymira","Inochi","Seloris"}
 }
-roles={"tank","heal","multiHeal","multiDps","myMultiHeal","myMultiDps","dps"}
 
 -- targetLists: {all,tank,heal,dps(default),multiHeal,multiDps,myMultiHeal,myMultiDps,party,group<1-8>,<charname>,master,self}   TODO: assist?,class,custom<any>?
 -- playerInfo: uid -> {name,role,class,group,bias}
@@ -83,11 +82,8 @@ function SetBias(bias,list,groupNum)
 end
 
 function GetRole(name)
-	for i,role in ipairs(roles) do
-		if role=="dps" then
-			break
-		end
-		for j,currentName in ipairs(nameList[role]) do
+	for role,names in pairs(nameList) do
+		for i,currentName in ipairs(names) do
 			if currentName==name then
 				return role
 			end
@@ -176,7 +172,7 @@ end
 function BuildTargetList()
 	-- Initialize/reset target list
 	targetList={all={},group={},party={},master={},self={}}
-	for i,role in ipairs(roles) do
+	for role,names in pairs(nameList) do
 		targetList[role]={}
 	end
 	for i=1,8 do

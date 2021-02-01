@@ -5,6 +5,7 @@ dpsMode=1
 -- 1: Skull/cross targeting
 -- 2: Master assist targeting (with skull/cross target lock if applied)
 precastInterruptWindow=1
+healHpThreshold=0.9
 healInterruptThreshold=0.95
 stopCastingDelay=0.5
 
@@ -62,7 +63,7 @@ function GetHealTarget(targetList,healSpell,healIcon)
 	local currentHotTarget,minHotHp,minBiasedHotHp
 	for target,info in pairs(targetList) do
 		local hp=UnitHealth(target)/UnitHealthMax(target)
-		if IsValidSpellTarget(target) then
+		if hp<healHpThreshold and IsValidSpellTarget(target) then
 			local biasedHp=hp+info.bias
 			if not minHp or biasedHp<minBiasedHp then
 				minHp,minBiasedHp,currentTarget=hp,biasedHp,target
