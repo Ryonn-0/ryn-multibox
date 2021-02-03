@@ -175,6 +175,7 @@ function BuildTargetList()
 	for role,names in pairs(nameList) do
 		targetList[role]={}
 	end
+	targetList.dps={}
 	for i=1,8 do
 		targetList.group[i]={}
 	end
