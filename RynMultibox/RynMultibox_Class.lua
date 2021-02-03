@@ -575,6 +575,7 @@ priestDispelDisease={Disease=true}
 function PriestDispelTarget(target,debuffType)
 	if target then
 		if debuffType=="Magic" then
+			ClearTarget()
 			CastSpellByName("Dispel Magic")
 		elseif not BuffCheck(target,buffAbolishDisease) then
 			CastSpellByName("Abolish Disease")
