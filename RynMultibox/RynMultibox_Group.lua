@@ -92,6 +92,16 @@ function GetRole(name)
 	return "dps"
 end
 
+function GetGroupId(uid)
+	name=UnitName(uid)
+	for target,info in pairs(targetList.all) do
+		if info.name==name then
+			return target
+		end
+	end
+	return nil
+end
+
 function RegisterUnit(isRaid,raidOrUnitId)
 	local uid
 	if isRaid then
@@ -116,7 +126,7 @@ function RegisterUnit(isRaid,raidOrUnitId)
 		targetInfo.group=unitGroup or 0
 		targetInfo.role=unitRole
 		targetInfo.bias=0
-		
+
 		-- Add player to target lists, set bias values
 		-- All
 		targetList.all[uid]=targetInfo
@@ -166,6 +176,12 @@ function GroupManagementHandler()
 		BuildTargetList()
 	elseif event=="PLAYER_ENTERING_WORLD" or event=="RAID_ROSTER_UPDATE" and UnitInRaid("player") or event=="PARTY_MEMBERS_CHANGED" and not UnitInRaid("player") then
 		UpdateTargetList()
+	--elseif event=="SPELLCAST_FAILED" then
+	--	local s="OK"
+	--	if isHealScriptRunning then
+	--		s="Ignore"
+	--	end
+	--	Debug("Spellcast failed! "..s)
 	end
 end
 

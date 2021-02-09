@@ -13,6 +13,7 @@ stopCastingDelayExpire=nil
 currentHealTarget=nil
 currentHealFinish=nil
 precastHpThreshold=nil
+isHealScriptRunning=nil
 
 function Debug(message)
 	if message==nil then
@@ -130,9 +131,8 @@ end
 
 function HealInterrupt(target,finish,hpThreshold)
 	if not stopCastingDelayExpire then
-		if target=="targettarget" then -- Precast
-			if not (CheckRaidIcon("target",8) or CheckRaidIcon("target",7)) or
-			not UnitExists(target) or not UnitIsFriend("player",target) or
+		if precastHpThreshold then -- Precast
+			if not UnitExists(target) or not UnitIsFriend("player",target) or
 			finish-precastInterruptWindow<GetTime() and not HpLower(target,hpThreshold) then
 				SpellStopCasting()
 				--Debug("Precast interrupt!")
@@ -186,15 +186,21 @@ function IsCastingOrChanelling()
 end
 
 function SpellCastReady(spell,delay)
-	return not IsCastingOrChanelling() and GetSpellCooldownByName(spell)==0 and (not delay or delay<GetTime())
+	if not IsCastingOrChanelling() and GetSpellCooldownByName(spell)==0 and (not delay or delay<GetTime()) then
+		stopCastingDelayExpire=nil
+		precastHpThreshold=nil
+		isHealScriptRunning=true
+		return true
+	end
+	return false
 end
 
 function TryTargetRaidIcon(icon,tabCount,tankTargetCheck)
 	if not CheckRaidIcon("target",icon) then
 		if tankTargetCheck then
 			for target,info in pairs(targetList.tank) do
-				AssistUnit(target)
-				if CheckRaidIcon("target",icon) then
+				if CheckRaidIcon(target.."target",icon) then
+					AssistUnit(target)
 					return true
 				end
 			end

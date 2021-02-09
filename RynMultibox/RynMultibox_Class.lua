@@ -42,7 +42,7 @@ palaBuffCustom={
 	Alaniel={"Blessing of Wisdom",buffWisdom},
 	Arvene={"Blessing of Wisdom",buffWisdom}
 }
-palaHealRange="Holy Light"
+palaHealRange="Holy Light(Rank 1)"
 palaDispelRange="Purify"
 
 function InitHealProfiles()
@@ -79,26 +79,30 @@ function InitHealProfiles()
 			{0.4 , 660, "Holy Light"},
 			{0.6 , 140, "Flash of Light"},
 			{0.8 , 90 , "Flash of Light(Rank 4)"},
-			{0.9 , 50 , "Flash of Light(Rank 2)"}
+			{0.9 , 50 , "Flash of Light(Rank 2)"},
+			{0.9 , 140, "Flash of Light",2}
 		},
 		hlTankOnly={
 			{0.4 , 720, "Divine Favor",1,targetList.tank},
 			{0.4 , 660, "Holy Light",1,targetList.tank},
 			{0.6 , 140, "Flash of Light"},
 			{0.8 , 70 , "Flash of Light(Rank 3)"},
-			{0.9 , 35 , "Flash of Light(Rank 1)"}
+			{0.9 , 35 , "Flash of Light(Rank 1)"},
+			{0.9 , 140, "Flash of Light",2}
 		},
 		low={
 			{0.4 , 720, "Divine Favor",1,targetList.tank},
 			{0.4 , 660, "Holy Light",1,targetList.tank,true},
 			{0.6 , 70 , "Flash of Light(Rank 5)"},
 			{0.8 , 50 , "Flash of Light(Rank 3)"},
-			{0.9 , 35 , "Flash of Light(Rank 1)"}
+			{0.9 , 35 , "Flash of Light(Rank 1)"},
+			{0.9 , 35 , "Flash of Light(Rank 1)",2}
 		},
 		UNLIMITEDPOWER={
 			{0.5 , 0  , "Holy Light",1,targetList.tank},
 			{0.3 , 0  , "Holy Light"},
-			{0.99, 0  , "Flash of Light"}
+			{0.99, 0  , "Flash of Light"},
+			{0.9 , 0  , "Holy Light",2}
 		},
 		precastTest={
 			{0.9 , 35 ,"Holy Light(Rank 1)",2}
@@ -117,17 +121,19 @@ function InitHealProfiles()
 			{0.7 , 216, "Heal(Rank 3)"},
 			{0.8 , 174, "Heal(Rank 2)"},
 			{0.9 , 94 , "Renew(Rank 3)",3},
-			{0.9 , 131, "Heal(Rank 1)"}
+			{0.9 , 131, "Heal(Rank 1)"},
+			{0.9 , 259, "Heal",2}
 		},
 		renewSpam={
-			{0.4 , 380, "Flash Heal",1,targetList.tank},
+			{0.5 , 380, "Flash Heal",1,targetList.tank},
 			{0.5 , 0  , "Inner Focus",4},
 			{0.5 , 0  , "Prayer of Healing",4,false,true},
 			{0.8 , 410, "Prayer of Healing(Rank 1)",4},
-			{0.4 , 259, "Heal(Rank 4)"},
+			{0.4 , 259, "Heal"},
 			{0.6 , 184, "Renew(Rank 6)",3},
 			{0.9 , 94 , "Renew(Rank 3)",3},
-			{0.9 , 131, "Heal(Rank 1)"}
+			{0.9 , 131, "Heal(Rank 1)"},
+			{0.9 , 259, "Heal",2}
 		},
 		pureRenewSpam={
 			{0.6 , 184, "Renew(Rank 6)",3},
@@ -135,7 +141,8 @@ function InitHealProfiles()
 		},
 		UNLIMITEDPOWER={
 			{0.9 , 0  , "Prayer of Healing",4},
-			{0.99, 0  , "Flash Heal"}
+			{0.99, 0  , "Flash Heal"},
+			{0.9 , 0  , "Greater Heal",2}
 		},
 		precastTest={
 			{0.9 , 131, "Heal(Rank 1)",2}
@@ -159,11 +166,11 @@ function PalaHealTarget(healProfile,target,hp)
 					if CheckRaidIcon("target",8) or CheckRaidIcon("target",7) or TryTargetRaidIcon(8,10,true) or TryTargetRaidIcon(7,10,true) then
 						if UnitExists("targettarget") and UnitIsFriend("player","targettarget") then
 							--Debug("Executing heal profile \""..healProfile.."\", entry: "..i)
-							currentHealTarget="targettarget"
+							currentHealTarget=GetGroupId("targettarget") or "targettarget"
 							currentHealFinish=GetTime()+(GetSpellCastTimeByName(spellName) or 1.5)
 							precastHpThreshold=hpThreshold
 							CastSpellByName(spellName)
-							SpellTargetUnit("targettarget")
+							SpellTargetUnit(currentHealTarget)
 						end
 					end
 					break
@@ -176,9 +183,9 @@ end
 function PalaHeal(targetList,healProfile)
 	healProfile=healProfile or "regular"
 	if SpellCastReady(palaHealRange,stopCastingDelayExpire) then
-		stopCastingDelayExpire=nil
 		local target,hp=GetHealTarget(targetList,palaHealRange)
 		PalaHealTarget(healProfile,target,hp)
+		isHealScriptRunning=nil
 	else
 		HealInterrupt(currentHealTarget,currentHealFinish,precastHpThreshold)
 	end
@@ -205,6 +212,7 @@ function PalaDispel(targetList,dispelTypes,dispelByHp)
 	if SpellCastReady(palaDispelRange) then
 		local target=GetDispelTarget(targetList,palaDispelRange,dispelTypes,dispelByHp)
 		PalaDispelTarget(target)
+		isHealScriptRunning=nil
 	end
 end
 
@@ -214,13 +222,13 @@ function PalaHealOrDispel(targetList,healProfile,dispelTypes,dispelByHp,dispelHp
 	dispelByHp=dispelByHp or false
 	dispelHpThreshold=dispelHpThreshold or 0.4
 	if SpellCastReady(palaHealRange,stopCastingDelayExpire) then
-		stopCastingDelayExpire=nil
 		local target,hpOrDebuffType,_,_,action=GetHealOrDispelTarget(targetList,palaHealRange,nil,palaDispelRange,dispelTypes,dispelByHp,dispelHpThreshold)
 		if action=="heal" then
 			PalaHealTarget(healProfile,target,hpOrDebuffType)
 		else
 			PalaDispelTarget(target,hpOrDebuffType)
 		end
+		isHealScriptRunning=nil
 	else
 		HealInterrupt(currentHealTarget,currentHealFinish,precastHpThreshold)
 	end
@@ -495,7 +503,7 @@ buffRenew="Interface\\Icons\\Spell_Holy_Renew"
 buffInnerFocus="Interface\\Icons\\Spell_Frost_WindWalkOn"
 spellHeal="Interface\\Icons\\Spell_Holy_Heal02"
 
-priestHealRange="Heal"
+priestHealRange="Lesser Heal(Rank 1)"
 priestDispelRange="Cure Disease"
 aoeHealMinPlayers=3
 
@@ -515,11 +523,11 @@ function PriestHealTarget(healProfile,target,hp,hotTarget,hotHp,aoeInfo)
 					if CheckRaidIcon("target",8) or CheckRaidIcon("target",7) or TryTargetRaidIcon(8,10,true) or TryTargetRaidIcon(7,10,true) then
 						if UnitExists("targettarget") and UnitIsFriend("player","targettarget") then
 							--Debug("Executing heal profile \""..healProfile.."\", entry: "..i)
-							currentHealTarget="targettarget"
+							currentHealTarget=GetGroupId("targettarget") or "targettarget"
 							currentHealFinish=GetTime()+(GetSpellCastTimeByName(spellName) or 1.5)
 							precastHpThreshold=hpThreshold
 							CastSpellByName(spellName)
-							SpellTargetUnit("targettarget")
+							SpellTargetUnit(currentHealTarget)
 						end
 					end
 					break
@@ -543,10 +551,10 @@ end
 function PriestHeal(targetList,healProfile)
 	healProfile=healProfile or "regular"
 	if SpellCastReady(priestHealRange,stopCastingDelayExpire) then
-		stopCastingDelayExpire=nil
 		local target,hp,hotTarget,hotHp=GetHealTarget(targetList,priestHealRange,buffRenew)
 		local aoeInfo=PriestAoeInfo()
 		PriestHealTarget(healProfile,target,hp,hotTarget,hotHp,aoeInfo)
+		isHealScriptRunning=nil
 	else
 		HealInterrupt(currentHealTarget,currentHealFinish,precastHpThreshold)
 	end
@@ -592,6 +600,7 @@ function PriestDispel(targetList,dispelTypes,dispelByHp)
 	if SpellCastReady(priestDispelRange) then
 		local target,debuffType=GetDispelTarget(targetList,priestDispelRange,priestDispelAll,false)
 		PriestDispelTarget(target,debuffType)
+		isHealScriptRunning=nil
 	end
 end
 
@@ -601,13 +610,14 @@ function PriestHealOrDispel(targetList,healProfile,dispelTypes,dispelByHp,dispel
 	dispelByHp=dispelByHp or false
 	dispelHpThreshold=dispelHpThreshold or 0.4
 	if SpellCastReady(priestHealRange,stopCastingDelayExpire) then
-		stopCastingDelayExpire=nil
 		local target,hpOrDebuffType,hotTarget,hotHp,action=GetHealOrDispelTarget(targetList,priestHealRange,buffRenew,priestDispelRange,dispelTypes,dispelByHp,dispelHpThreshold)
 		if action=="heal" then
-			PriestHealTarget(healProfile,target,hpOrDebuffType,hotTarget,hotHp)
+			local aoeInfo=PriestAoeInfo()
+			PriestHealTarget(healProfile,target,hpOrDebuffType,hotTarget,hotHp,aoeInfo)
 		else
 			PriestDispelTarget(target,hpOrDebuffType)
 		end
+		isHealScriptRunning=nil
 	else
 		HealInterrupt(currentHealTarget,currentHealFinish,precastHpThreshold)
 	end

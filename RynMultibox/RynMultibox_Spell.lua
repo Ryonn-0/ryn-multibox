@@ -42,10 +42,10 @@ function BuildSpellData()
 				spellData[spellDataKey.."()"]=spellData[spellDataKey]
 			end
 		end
-		if spellCastTime[spellName] then
-			spellData[spellDataKey].castTime=spellCastTime[spellName]
-		elseif spellCastTime[spellName.."("..spellRank..")"] then
+		if spellCastTime[spellName.."("..spellRank..")"] then
 			spellData[spellDataKey].castTime=spellCastTime[spellName.."("..spellRank..")"]
+		elseif spellCastTime[spellName] then
+			spellData[spellDataKey].castTime=spellCastTime[spellName]
 		end
 		-- TODO: Cast time decreasing talents
 		i=i+1
