@@ -158,6 +158,7 @@ function PalaHealTarget(healProfile,target,hp)
 			if mana>=manaCost and (not withCdOnly or BuffCheck("player",buffDivineFavor)) and GetSpellCooldownByName(spellName)==0 then
 				if (not healMode or healMode==1) and target and hp<hpThreshold and (not targetList or targetList[target]) then
 					--Debug("Executing heal profile \""..healProfile.."\", entry: "..i)
+					targetList.all[target].blacklist=nil
 					currentHealTarget=target
 					CastSpellByName(spellName)
 					SpellTargetUnit(target)
@@ -185,7 +186,6 @@ function PalaHeal(targetList,healProfile)
 	if SpellCastReady(palaHealRange,stopCastingDelayExpire) then
 		local target,hp=GetHealTarget(targetList,palaHealRange)
 		PalaHealTarget(healProfile,target,hp)
-		isHealScriptRunning=nil
 	else
 		HealInterrupt(currentHealTarget,currentHealFinish,precastHpThreshold)
 	end
@@ -201,6 +201,8 @@ palaDispelNoPoison={Magic=true,Disease=true}
 
 function PalaDispelTarget(target)
 	if target then
+		targetList.all[target].blacklist=nil
+		currentHealTarget=target
 		CastSpellByName("Cleanse")
 		SpellTargetUnit(target)
 	end
@@ -212,7 +214,6 @@ function PalaDispel(targetList,dispelTypes,dispelByHp)
 	if SpellCastReady(palaDispelRange) then
 		local target=GetDispelTarget(targetList,palaDispelRange,dispelTypes,dispelByHp)
 		PalaDispelTarget(target)
-		isHealScriptRunning=nil
 	end
 end
 
@@ -228,7 +229,6 @@ function PalaHealOrDispel(targetList,healProfile,dispelTypes,dispelByHp,dispelHp
 		else
 			PalaDispelTarget(target,hpOrDebuffType)
 		end
-		isHealScriptRunning=nil
 	else
 		HealInterrupt(currentHealTarget,currentHealFinish,precastHpThreshold)
 	end
@@ -369,13 +369,17 @@ druidDispelAll={Poison=true,Curse=true}
 druidDispelPoison={Poison=true}
 druidDispelCurse={Curse=true}
 
-function DruidDispel(targetList)
-	local target,debuffType=GetDispelTarget(targetList,druidDispelRange,druidDispelAll,false)
-	if target then
-		if IsMoonkin() then
-			CastShapeshiftForm(5)
-			return
-		else
+function DruidDispel(targetList,moonkinSwap)
+	moonkinSwap=moonkinSwap or false
+	if SpellCastReady(druidDispelRange,false) then
+		local target,debuffType=GetDispelTarget(targetList,druidDispelRange,druidDispelAll,false)
+		if target then
+			if moonkinSwap and IsMoonkin() then
+				CastShapeshiftForm(5)
+				return
+			end
+			targetList.all[target].blacklist=nil
+			currentHealTarget=target
 			if debuffType=="Curse" then
 				CastSpellByName("Remove Curse")
 			elseif not BuffCheck(target,buffAbolishPoison) then
@@ -384,10 +388,9 @@ function DruidDispel(targetList)
 				CastSpellByName("Cure Poison")
 			end
 			SpellTargetUnit(target)
+		elseif moonkinSwap and not IsMoonkin() then
+			CastShapeshiftForm(5)
 		end
-	end
-	if not IsMoonkin() then
-		CastShapeshiftForm(5)
 	end
 end
 
@@ -480,10 +483,14 @@ end
 mageDispel={Curse=true}
 
 function MageDispel(targetList)
-	local target=GetDispelTarget(targetList,mageDispelRange,mageDispel,false)
-	if target then
-		CastSpellByName("Remove Lesser Curse")
-		SpellTargetUnit(target)
+	if SpellCastReady(mageDispelRange,false) then
+		local target=GetDispelTarget(targetList,mageDispelRange,mageDispel,false)
+		if target then
+			targetList.all[target].blacklist=nil
+			currentHealTarget=target
+			CastSpellByName("Remove Lesser Curse")
+			SpellTargetUnit(target)
+		end
 	end
 end
 
@@ -510,11 +517,12 @@ aoeHealMinPlayers=3
 function PriestHealTarget(healProfile,target,hp,hotTarget,hotHp,aoeInfo)
 	if priestHealProfiles[healProfile] then
 		for i,healProfileEntry in ipairs(priestHealProfiles[healProfile]) do
-			local hpThreshold,manaCost,spellName,healMode,targetList,withCdOnly=unpack(healProfileEntry)
+			local hpThreshold,manaCost,spellName,healMode,lTargetList,withCdOnly=unpack(healProfileEntry)
 			local mana=UnitMana("player")
 			if mana>=manaCost and (not withCdOnly or BuffCheck("player",buffInnerFocus)) and GetSpellCooldownByName(spellName)==0 then
-				if (not healMode or healMode==1) and target and hp<hpThreshold and (not targetList or targetList[target]) then
+				if (not healMode or healMode==1) and target and hp<hpThreshold and (not lTargetList or lTargetList[target]) then
 					--Debug("Executing heal profile \""..healProfile.."\", entry: "..i)
+					targetList.all[target].blacklist=nil
 					currentHealTarget=target
 					CastSpellByName(spellName)
 					SpellTargetUnit(target)
@@ -531,9 +539,10 @@ function PriestHealTarget(healProfile,target,hp,hotTarget,hotHp,aoeInfo)
 						end
 					end
 					break
-				elseif healMode==3 and hotTarget and hotHp<hpThreshold and (not targetList or targetList[hotTarget]) then
+				elseif healMode==3 and hotTarget and hotHp<hpThreshold and (not lTargetList or lTargetList[hotTarget]) then
 					--Debug("Executing heal profile \""..healProfile.."\", entry: "..i)
-					currentHealTarget=nil
+					targetList.all[target].blacklist=nil
+					currentHealTarget=hotTarget
 					CastSpellByName(spellName)
 					SpellTargetUnit(hotTarget)
 					break
@@ -554,7 +563,6 @@ function PriestHeal(targetList,healProfile)
 		local target,hp,hotTarget,hotHp=GetHealTarget(targetList,priestHealRange,buffRenew)
 		local aoeInfo=PriestAoeInfo()
 		PriestHealTarget(healProfile,target,hp,hotTarget,hotHp,aoeInfo)
-		isHealScriptRunning=nil
 	else
 		HealInterrupt(currentHealTarget,currentHealFinish,precastHpThreshold)
 	end
@@ -582,6 +590,8 @@ priestDispelDisease={Disease=true}
 
 function PriestDispelTarget(target,debuffType)
 	if target then
+		targetList.all[target].blacklist=nil
+		currentHealTarget=target
 		if debuffType=="Magic" then
 			ClearTarget()
 			CastSpellByName("Dispel Magic")
@@ -600,7 +610,6 @@ function PriestDispel(targetList,dispelTypes,dispelByHp)
 	if SpellCastReady(priestDispelRange) then
 		local target,debuffType=GetDispelTarget(targetList,priestDispelRange,priestDispelAll,false)
 		PriestDispelTarget(target,debuffType)
-		isHealScriptRunning=nil
 	end
 end
 
@@ -617,7 +626,6 @@ function PriestHealOrDispel(targetList,healProfile,dispelTypes,dispelByHp,dispel
 		else
 			PriestDispelTarget(target,hpOrDebuffType)
 		end
-		isHealScriptRunning=nil
 	else
 		HealInterrupt(currentHealTarget,currentHealFinish,precastHpThreshold)
 	end

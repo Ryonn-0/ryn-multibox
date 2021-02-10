@@ -176,12 +176,15 @@ function GroupManagementHandler()
 		BuildTargetList()
 	elseif event=="PLAYER_ENTERING_WORLD" or event=="RAID_ROSTER_UPDATE" and UnitInRaid("player") or event=="PARTY_MEMBERS_CHANGED" and not UnitInRaid("player") then
 		UpdateTargetList()
-	--elseif event=="SPELLCAST_FAILED" then
-	--	local s="OK"
-	--	if isHealScriptRunning then
-	--		s="Ignore"
-	--	end
-	--	Debug("Spellcast failed! "..s)
+	-- TODO: Refactor
+	elseif event=="UI_ERROR_MESSAGE" and arg1 and arg1=="Target not in line of sight" then
+		if currentHealTarget then
+			local targetInfo=targetList.all[currentHealTarget]
+			if targetInfo then
+				targetList.all[currentHealTarget].blacklist=GetTime()+10
+				Debug("Blacklisted "..targetInfo.name.."! ("..blacklistTime.."s)")
+			end
+		end
 	end
 end
 

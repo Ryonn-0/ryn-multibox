@@ -9,7 +9,7 @@
 				this:RegisterEvent("PLAYER_ENTERING_WORLD")
 				this:RegisterEvent("PARTY_MEMBERS_CHANGED")
 				this:RegisterEvent("RAID_ROSTER_UPDATE")
-				<!--this:RegisterEvent("SPELLCAST_FAILED")-->
+				this:RegisterEvent("UI_ERROR_MESSAGE")
 			</OnLoad>
 			<OnEvent>
 				GroupManagementHandler();
