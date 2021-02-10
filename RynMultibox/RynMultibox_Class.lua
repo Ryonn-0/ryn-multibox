@@ -153,10 +153,10 @@ end
 function PalaHealTarget(healProfile,target,hp)
 	if palaHealProfiles[healProfile] then
 		for i,healProfileEntry in ipairs(palaHealProfiles[healProfile]) do
-			local hpThreshold,manaCost,spellName,healMode,targetList,withCdOnly=unpack(healProfileEntry)
+			local hpThreshold,manaCost,spellName,healMode,pTargetList,withCdOnly=unpack(healProfileEntry)
 			local mana=UnitMana("player")
 			if mana>=manaCost and (not withCdOnly or BuffCheck("player",buffDivineFavor)) and GetSpellCooldownByName(spellName)==0 then
-				if (not healMode or healMode==1) and target and hp<hpThreshold and (not targetList or targetList[target]) then
+				if (not healMode or healMode==1) and target and hp<hpThreshold and (not pTargetList or pTargetList[target]) then
 					--Debug("Executing heal profile \""..healProfile.."\", entry: "..i)
 					targetList.all[target].blacklist=nil
 					currentHealTarget=target

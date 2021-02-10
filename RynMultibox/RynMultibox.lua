@@ -68,7 +68,7 @@ function GetHealTarget(targetList,healSpell,healIcon)
 		if hp<healHpThreshold and IsValidSpellTarget(target) then
 			if not info.blacklist or info.blacklist<=GetTime() then
 				if blacklistFlag then
-					blacklistFlag,currentHotTarget,minHotHp=false,nil,nil
+					blacklistFlag,currentTarget,currentHotTarget,minHp,minHotHp=false,nil,nil,nil,nil
 				end
 				info.blacklist=nil
 				local biasedHp=hp+info.bias
@@ -110,7 +110,9 @@ function GetDispelTarget(targetList,dispelSpell,dispelTypes,dispelByHp)
 			end
 			if debuffType then
 				if not info.blacklist or info.blacklist<=GetTime() then
-					blacklistFlag=false
+					if blacklistFlag then
+						blacklistFlag,currentTarget,currentDebuffType=false,nil,nil
+					end
 					info.blacklist=nil
 					local priority=info.bias
 					if dispelByHp then
