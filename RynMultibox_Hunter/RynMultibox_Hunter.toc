@@ -1,7 +1,0 @@
-## Interface: 11200
-## Title: RynMultibox [Hunter]
-## Notes: Some stuff I made for hunters.
-## RequiredDeps: RynMultibox
-## LoadOnDemand: 1
-## Author: Ryonn
-RynMultibox_Hunter.xml
