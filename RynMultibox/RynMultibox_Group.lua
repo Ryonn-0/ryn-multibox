@@ -1,7 +1,6 @@
 -- Group management
 
-masterName="Harklen"
-nameList={
+local nameList={
 	tank={"Harklen","Gaelber","Llanewrynn","Stardancer","Cooperbeard","Naderius","Dobzse","Obier","Yxon","Amonstenn","Fierileya"},
 	heal={"Alaniel","Flo","Livia","Hoyt","Myra","Papsajt","Negreanu","Kearlah","Azure","Warrógép","Rhodelya"},
 	multiHeal={
@@ -18,16 +17,29 @@ nameList={
 	myMultiDps={"Arvene","Nymira","Inochi","Seloris"}
 }
 
+local function InitTargetList()
+	ryn.targetList={all={},group={},party={},master={},self={}}
+	for role,names in pairs(nameList) do
+		ryn.targetList[role]={}
+	end
+	ryn.targetList.dps={}
+	for i=1,8 do
+		ryn.targetList.group[i]={}
+	end
+end
+InitTargetList()
+local targetListReady=false
+
 -- targetLists: {all,tank,heal,dps(default),multiHeal,multiDps,myMultiHeal,myMultiDps,party,group<1-8>,<charname>,master,self}   TODO: assist?,class,custom<any>?
 -- playerInfo: uid -> {name,role,class,group,bias}
 
 -- Initialize bias list structure
-biasList={group={}}
+local biasList={group={}}
 
 -- Set default global bias values
 biasList.tank,biasList.heal,biasList.multiHeal,biasList.multiDps,biasList.myMultiHeal,biasList.myMultiDps=-0.1,-0.07,0.1,0.15,-0.05,-0.02
 biasList.Cipola=10000
-biasList.Harklen=-0.06
+biasList.Harklen=-0.1
 biasList.Alaniel=-0.02
 biasList.self=-0.05
 
@@ -39,13 +51,13 @@ biasList.self=-0.05
 --biasList.party=10
 --biasList.Alaniel=100
 
-function AddBias(targetInfo,value)
+local function AddBias(targetInfo,value)
 	if value then
 		targetInfo.bias=targetInfo.bias+value
 	end
 end
 
-function RemoveBias(targetInfo,value)
+local function RemoveBias(targetInfo,value)
 	if value then
 		targetInfo.bias=targetInfo.bias-value
 	end
@@ -65,14 +77,14 @@ function SetBias(bias,list,groupNum)
 	if oldBias==bias then
 		return
 	end
-	if targetList then
+	if ryn.targetList then
 		if list=="group" then
-			for target,info in pairs(targetList.group[groupNum]) do
+			for target,info in pairs(ryn.targetList.group[groupNum]) do
 				RemoveBias(info,oldBias)
 				AddBias(info,bias)
 			end
 		else
-			for target,info in pairs(targetList[list]) do
+			for target,info in pairs(ryn.targetList[list]) do
 				RemoveBias(info,oldBias)
 				AddBias(info,bias)
 			end
@@ -81,7 +93,7 @@ function SetBias(bias,list,groupNum)
 	--Debug("New bias value set.")
 end
 
-function GetRole(name)
+ryn.GetRole=function(name)
 	for role,names in pairs(nameList) do
 		for i,currentName in ipairs(names) do
 			if currentName==name then
@@ -92,17 +104,16 @@ function GetRole(name)
 	return "dps"
 end
 
-function GetGroupId(uid)
-	name=UnitName(uid)
-	for target,info in pairs(targetList.all) do
-		if info.name==name then
+ryn.GetGroupId=function(uid)
+	for target,_ in pairs(ryn.targetList.all) do
+		if UnitIsUnit(uid,target) then
 			return target
 		end
 	end
 	return nil
 end
 
-function RegisterUnit(isRaid,raidOrUnitId)
+local function RegisterUnit(isRaid,raidOrUnitId)
 	local uid
 	if isRaid then
 		uid="raid"..raidOrUnitId
@@ -118,7 +129,7 @@ function RegisterUnit(isRaid,raidOrUnitId)
 			unitName=UnitName(uid)
 			_,unitClass=UnitClass(uid)
 		end
-		local unitRole=GetRole(unitName)
+		local unitRole=ryn.GetRole(unitName)
 		local targetInfo={}
 		local isPlayer=unitName==UnitName("player")
 		targetInfo.name=unitName
@@ -129,75 +140,81 @@ function RegisterUnit(isRaid,raidOrUnitId)
 
 		-- Add player to target lists, set bias values
 		-- All
-		targetList.all[uid]=targetInfo
+		ryn.targetList.all[uid]=targetInfo
 		
 		-- Role
-		targetList[unitRole][uid]=targetInfo
+		ryn.targetList[unitRole][uid]=targetInfo
 		AddBias(targetInfo,biasList[unitRole])
 		
 		-- Group
 		if isRaid then
-			targetList.group[unitGroup][uid]=targetInfo
+			ryn.targetList.group[unitGroup][uid]=targetInfo
 			AddBias(targetInfo,biasList.group[unitGroup])
 			if isPlayer then
-				targetList.party=targetList.group[unitGroup]
-				for target,partyInfo in pairs(targetList.party) do
+				ryn.targetList.party=ryn.targetList.group[unitGroup]
+				for target,partyInfo in pairs(ryn.targetList.party) do
 					AddBias(partyInfo,biasList.party)
 				end
-			elseif targetList.party[uid] then
+			elseif ryn.targetList.party[uid] then
 				AddBias(targetInfo,biasList.party)
 			end
 		else
-			targetList.party[uid]=targetInfo
+			ryn.targetList.party[uid]=targetInfo
 		end
 		
 		-- Player
-		targetList[unitName]={}
-		targetList[unitName][uid]=targetInfo
+		ryn.targetList[unitName]={}
+		ryn.targetList[unitName][uid]=targetInfo
 		AddBias(targetInfo,biasList[unitName])
 		if isPlayer then
-			targetList.self=targetList[unitName]
+			ryn.targetList.self=ryn.targetList[unitName]
 			AddBias(targetInfo,biasList.self)
 		end
 		
 		-- Master
-		if unitName==masterName then
-			targetList.master={}
-			targetList.master[uid]=targetInfo
+		if unitName==ryn.masterName then
+			ryn.targetList.master={}
+			ryn.targetList.master[uid]=targetInfo
 			AddBias(targetInfo,biasList.master)
-			masterTarget=uid
+			ryn.masterTarget=uid
 		end
 	end
 end
 
-function GroupManagementHandler()
+local function GroupManagementHandler()
 	--Debug(event)
-	if not targetList then
-		BuildTargetList()
+	if not targetListReady then
+		ryn.BuildTargetList()
 	elseif event=="PLAYER_ENTERING_WORLD" or event=="RAID_ROSTER_UPDATE" and UnitInRaid("player") or event=="PARTY_MEMBERS_CHANGED" and not UnitInRaid("player") then
-		UpdateTargetList()
+		ryn.UpdateTargetList()
 	-- TODO: Refactor
 	elseif event=="UI_ERROR_MESSAGE" and arg1 and arg1=="Target not in line of sight" then
-		if currentHealTarget then
-			local targetInfo=targetList.all[currentHealTarget]
+		if ryn.currentHealTarget then
+			local targetInfo=ryn.targetList.all[ryn.currentHealTarget]
 			if targetInfo then
-				targetList.all[currentHealTarget].blacklist=GetTime()+10
 				Debug("Blacklisted "..targetInfo.name.."! ("..blacklistTime.."s)")
+				--if not targetInfo.blacklist then
+				--	SendChatMessage("Blacklisted "..targetInfo.name.."! ("..blacklistTime.."s)","SAY")
+				--end
+				targetInfo.blacklist=GetTime()+ryn.blacklistTime
 			end
 		end
+	elseif event=="SPELLCAST_START" then
+		ryn.currentHealFinish=GetTime()+arg2/1000
 	end
 end
 
-function BuildTargetList()
+local gmFrame=CreateFrame("Frame")
+gmFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+gmFrame:RegisterEvent("PARTY_MEMBERS_CHANGED")
+gmFrame:RegisterEvent("RAID_ROSTER_UPDATE")
+gmFrame:SetScript("OnEvent",GroupManagementHandler)
+
+ryn.BuildTargetList=function()
+	targetListReady=false
+	
 	-- Initialize/reset target list
-	targetList={all={},group={},party={},master={},self={}}
-	for role,names in pairs(nameList) do
-		targetList[role]={}
-	end
-	targetList.dps={}
-	for i=1,8 do
-		targetList.group[i]={}
-	end
+	InitTargetList()
 	
 	-- Register players
 	if UnitInRaid("player") then
@@ -205,7 +222,6 @@ function BuildTargetList()
 		for i=1,40 do
 			if UnitName("raid"..i)=="Unknown" then
 				--Debug("Couldn't build target list. raid"..i.."'s name is unknown.")
-				targetList=nil
 				return
 			end
 			RegisterUnit(true,i)
@@ -215,37 +231,32 @@ function BuildTargetList()
 		RegisterUnit(false,"player")
 		if UnitName("player")=="Unknown" then
 			--Debug("Couldn't build target list. player's name is unknown.")
-			targetList=nil
 			return
 		end
 		for i=1,GetNumPartyMembers() do
 			RegisterUnit(false,"party"..i)
 			if UnitName("party"..i)=="Unknown" then
 				--Debug("Couldn't build target list. party"..i.."'s name is unknown.")
-				targetList=nil
 				return
 			end
 		end
 	end
+	targetListReady=true
 	-- TODO: Put this somewhere else
-	local _,unitClass=UnitClass("player")
-	if unitClass=="HUNTER" and not IsAddOnLoaded("RynMultibox_Hunter") then
-		LoadAddOn("RynMultibox_Hunter")
-	end
-	InitHealProfiles()
-	BuildSpellData()
+	ryn.BuildSpellData()
 	--Debug("Target list built")
 end
 
-function UpdateTargetList()
+ryn.UpdateTargetList=function()
+	targetListReady=false
 	if UnitInRaid("player") then
 		if not partyToRaidChack then
-			BuildTargetList()
+			ryn.BuildTargetList()
 		else
 			for i=1,40 do
 				local uid="raid"..i
 				if UnitIsConnected(uid) then
-					currentTargetInfo=targetList.all[uid]
+					currentTargetInfo=ryn.targetList.all[uid]
 					if UnitName(uid)=="Unknown" then
 						--Debug("Couldn't update target list. raid"..i.."'s name is unknown.")
 						return
@@ -265,7 +276,7 @@ function UpdateTargetList()
 						end
 					end
 				else
-					if targetList.all[uid] then
+					if ryn.targetList.all[uid] then
 						RemoveUid(uid)
 						--Debug("Removed unused uid")
 					end
@@ -275,7 +286,7 @@ function UpdateTargetList()
 		end
 	else
 		if partyToRaidChack then
-			BuildTargetList()
+			ryn.BuildTargetList()
 		else
 			for i=1,GetNumPartyMembers() do
 				local uid="party"..i
@@ -284,7 +295,7 @@ function UpdateTargetList()
 						--Debug("Couldn't update target list. party"..i.."'s name is unknown.")
 						return
 					end
-					currentTargetInfo=targetList.all[uid]
+					currentTargetInfo=ryn.targetList.all[uid]
 					if not currentTargetInfo then
 						RegisterUnit(false,uid)
 						--Debug("Added new uid")
@@ -297,7 +308,7 @@ function UpdateTargetList()
 						end
 					end
 				else
-					if targetList.all[uid] then
+					if ryn.targetList.all[uid] then
 						RemoveUid(uid)
 						--Debug("Removed unused uid")
 					end
@@ -306,9 +317,10 @@ function UpdateTargetList()
 			--Debug("Target list updated")
 		end
 	end
+	targetListReady=true
 end
 
-function UpdatePlayer(uid,info,name,class)
+local function UpdatePlayer(uid,info,name,class)
 	local role=GetRole(name)
 	local oldRole=info.role
 	local oldName=info.name
@@ -317,8 +329,8 @@ function UpdatePlayer(uid,info,name,class)
 	-- Role
 	if role~=oldRole then
 		info.role=role
-		targetList[role][uid]=info
-		targetList[oldRole][uid]=nil
+		ryn.targetList[role][uid]=info
+		ryn.targetList[oldRole][uid]=nil
 		AddBias(info,biasList[role])
 		RemoveBias(info,biasList[oldRole])
 	end
@@ -330,99 +342,101 @@ function UpdatePlayer(uid,info,name,class)
 	if name~=oldName then -- Just to be safe.
 		info.name=name
 		
-		if not targetList[name] then
-			targetList[name]={}
+		if not ryn.targetList[name] then
+			ryn.targetList[name]={}
 		end
-		targetList[name][uid]=info
-		targetList[oldName][uid]=nil
+		ryn.targetList[name][uid]=info
+		ryn.targetList[oldName][uid]=nil
 		
 		AddBias(info,biasList[name])
 		RemoveBias(info,biasList[oldName])
 		
-		if name==masterName then
-			targetList.master[uid]=info
+		if name==ryn.masterName then
+			ryn.targetList.master[uid]=info
 			AddBias(info,biasList.master)
-			masterTarget=uid
-		elseif oldName==masterName then
-			targetList.master[uid]=nil
+			ryn.masterTarget=uid
+		elseif oldName==ryn.masterName then
+			ryn.targetList.master[uid]=nil
 			RemoveBias(info,biasList.master)
 		end
 		
 		if name==ownName then
-			targetList.self[uid]=info
+			ryn.targetList.self[uid]=info
 			AddBias(info,biasList.self)
 		elseif oldName==ownName then
-			targetList.self[uid]=nil
+			ryn.targetList.self[uid]=nil
 			RemoveBias(info,biasList.self)
 		end
 	end
 end
 
-function UpdateGroup(uid,info,groupNum)
+local function UpdateGroup(uid,info,groupNum)
 	local oldGroupNum=info.group
 	local ownName=UnitName("player")
 
 	if groupNum~=0 and oldGroupNum~=0 then -- Just to be safe
 		if ownName==info.name then
-			for target,partyInfo in pairs(targetList.party) do
+			for target,partyInfo in pairs(ryn.targetList.party) do
 				RemoveBias(partyInfo,biasList.party)
 			end
-		elseif targetList.party[uid] then
+		elseif ryn.targetList.party[uid] then
 			RemoveBias(info,biasList.party)
 		end
 		
 		info.group=groupNum
-		targetList.group[groupNum][uid]=info
-		targetList.group[oldGroupNum][uid]=nil
+		ryn.targetList.group[groupNum][uid]=info
+		ryn.targetList.group[oldGroupNum][uid]=nil
 		AddBias(info,biasList.group[groupNum])
 		RemoveBias(info,biasList.group[oldGroupNum])
 		
 		if ownName==info.name then
-			targetList.party=targetList.group[groupNum]
-			for target,partyInfo in pairs(targetList.party) do
+			ryn.targetList.party=ryn.targetList.group[groupNum]
+			for target,partyInfo in pairs(ryn.targetList.party) do
 				AddBias(partyInfo,biasList.party)
 			end
-		elseif targetList.party[uid] then
+		elseif ryn.targetList.party[uid] then
 			AddBias(info,biasList.party)
 		end
 	end
 end
 
-function RemoveUid(uid)
-	local info=targetList.all[uid]
+local function RemoveUid(uid)
+	local info=ryn.targetList.all[uid]
 	local name=info.name
 	local group=info.group
 	local role=info.role
 	
-	targetList.all[uid]=nil
-	targetList[name][uid]=nil
+	ryn.targetList.all[uid]=nil
+	ryn.targetList[name][uid]=nil
 	
 	if group==0 then
-		targetList.party[uid]=nil
+		ryn.targetList.party[uid]=nil
 	else
-		targetList.group[group][uid]=nil
+		ryn.targetList.group[group][uid]=nil
 	end
-	targetList[role][uid]=nil
-	if name==masterName then
-		targetList.master[uid]=nil
+	ryn.targetList[role][uid]=nil
+	if name==ryn.masterName then
+		ryn.targetList.master[uid]=nil
+		ryn.masterTarget=nil
 	end
 	if name==UnitName("player") then
-		targetList.self[uid]=nil
+		ryn.targetList.self[uid]=nil
 	end
 end
 
-function PrintTargetList(targetList)
+ryn.PrintTargetList=function(lTargetList)
+	lTargetList=lTargetList or ryn.targetList.all
 	DEFAULT_CHAT_FRAME:AddMessage("Target list:")
 	local count=0
-	for uid,info in pairs(targetList) do
+	for uid,info in pairs(lTargetList) do
 		DEFAULT_CHAT_FRAME:AddMessage(uid.." | "..info.name.." | "..info.role.." | "..info.class.." | group"..info.group.." | "..info.bias)
 		count=count+1
 	end
 	Debug("Players in target list: "..count)
 end
 
-function PrintTargetLists()
-	for listName,list in pairs(targetList) do
+ryn.PrintTargetLists=function()
+	for listName,list in pairs(ryn.targetList) do
 		if listName=="group" then
 			for i=1,8 do
 				DEFAULT_CHAT_FRAME:AddMessage("Target list [group["..i.."]]:")
@@ -439,9 +453,9 @@ function PrintTargetLists()
 	end
 end
 
-function PrintPlayerLists()
+ryn.PrintPlayerLists=function()
 	local tlCount,realTlCount=0,0
-	for listName,list in pairs(targetList) do
+	for listName,list in pairs(ryn.targetList) do
 		local firstChar=string.sub(listName,1,1)
 		if firstChar==string.upper(firstChar) then
 			DEFAULT_CHAT_FRAME:AddMessage("Target list ["..listName.."]:")

@@ -1,21 +1,28 @@
-buffBurstOfKnowledge="Interface\\Icons\\INV_Jewelry_Amulet_07"
-buffSecondWind="Interface\\Icons\\INV_Jewelry_Talisman_06"
+ryn={} -- Addon scope
 
-dpsMode=1
+-- Settings
+ryn.masterName="Harklen"
+ryn.dpsMode=1
 -- 1: Skull/cross targeting
 -- 2: Master assist targeting (with skull/cross target lock if applied)
-precastInterruptWindow=1
-healHpThreshold=0.9
-healInterruptThreshold=0.95
-stopCastingDelay=0.5
+ryn.precastInterruptWindow=0.5
+ryn.healHpThreshold=0.9
+ryn.healInterruptThreshold=0.95
+ryn.stopCastingDelay=0.5
+ryn.blacklistTime=10
+ryn.retryBlacklist=true
+-- true: Try to heal/dispel blacklisted players, when no non-blacklisted player needs healing/dispelling.
+-- false: Blacklisted players won't get heals/dispels until blacklist time expires.
 
-stopCastingDelayExpire=nil
-currentHealTarget=nil
-currentHealFinish=nil
-precastHpThreshold=nil
-blacklistTime=10
+-- Addon global variables
+_,ryn.playerClass=UnitClass("player")
+ryn.buffSoulstone="Interface\\Icons\\Spell_Shadow_SoulGem"
+--ryn.stopCastingDelayExpire
+--ryn.currentHealTarget
+--ryn.currentHealFinish
+--ryn.precastHpThreshold
 
-function Debug(message)
+ryn.Debug=function(message)
 	if message==nil then
 		DEFAULT_CHAT_FRAME:AddMessage("nil")
 	else
@@ -23,17 +30,7 @@ function Debug(message)
 	end
 end
 
-function ManaLower(target,manaThreshold)
-	local manaCurrent=UnitMana(target)/UnitManaMax(target)
-	return manaCurrent<manaThreshold
-end
-
-function HpLower(target,hpThreshold)
-	local hpCurrent=UnitHealth(target)/UnitHealthMax(target)
-	return hpCurrent<hpThreshold
-end
-
-function GetSpellSlot(texture)
+ryn.GetSpellSlot=function(texture)
 	for i=1,120 do
 		if GetActionTexture(i)==texture then
 			return i
@@ -42,30 +39,54 @@ function GetSpellSlot(texture)
 	return nil
 end
 
-function IsCastingOrChanneling()
+ryn.GetActionSlots=function()
+	for lActionSlot = 1, 120 do
+		local lActionText = GetActionText(lActionSlot);
+		local lActionTexture = GetActionTexture(lActionSlot);
+		if lActionTexture then
+			local lMessage = "Slot " .. lActionSlot .. ": [" .. lActionTexture .. "]";
+			if lActionText then
+				lMessage = lMessage .. " \"" .. lActionText .. "\"";
+			end
+			DEFAULT_CHAT_FRAME:AddMessage(lMessage);
+		end
+	end
+end
+
+ryn.ManaLower=function(target,manaThreshold)
+	local manaCurrent=UnitMana(target)/UnitManaMax(target)
+	return manaCurrent<manaThreshold
+end
+
+ryn.HpLower=function(target,hpThreshold)
+	local hpCurrent=UnitHealth(target)/UnitHealthMax(target)
+	return hpCurrent<hpThreshold
+end
+
+ryn.IsCastingOrChanneling=function()
 	return CastingBarFrame.casting or CastingBarFrame.channeling
 end
 
-function IsValidSpellTarget(target)
+ryn.IsValidSpellTarget=function(target)
 	return not UnitIsDeadOrGhost(target) and SpellCanTargetUnit(target)
 end
 
-function ClearFriendlyTarget()
+ryn.ClearFriendlyTarget=function()
 	if UnitExists("target") and UnitIsFriend("player","target") then
 		ClearTarget()
 	end
 end
 
 -- TODO?: Might need to implement a second HoT check for druid healers.
-function GetHealTarget(targetList,healSpell,healIcon)
-	ClearFriendlyTarget()
+ryn.GetHealTarget=function(targetList,healSpell,healIcon)
+	ryn.ClearFriendlyTarget()
 	CastSpellByName(healSpell)
 	local currentTarget,minHp,minBiasedHp
 	local currentHotTarget,minHotHp,minBiasedHotHp
-	local blacklistFlag,minBlacklistTime=true,nil
+	local blacklistFlag,minBlacklistTime=ryn.retryBlacklist,nil
 	for target,info in pairs(targetList) do
 		local hp=UnitHealth(target)/UnitHealthMax(target)
-		if hp<healHpThreshold and IsValidSpellTarget(target) then
+		if hp<ryn.healHpThreshold and ryn.IsValidSpellTarget(target) then
 			if not info.blacklist or info.blacklist<=GetTime() then
 				if blacklistFlag then
 					blacklistFlag,currentTarget,currentHotTarget,minHp,minHotHp=false,nil,nil,nil,nil
@@ -75,7 +96,7 @@ function GetHealTarget(targetList,healSpell,healIcon)
 				if not minHp or biasedHp<minBiasedHp then
 					minHp,minBiasedHp,currentTarget=hp,biasedHp,target
 				end
-				if healIcon and (not minHotHp or biasedHp<minBiasedHotHp) and not BuffCheck(target,healIcon) then
+				if healIcon and (not minHotHp or biasedHp<minBiasedHotHp) and not ryn.BuffCheck(target,healIcon) then
 					minHotHp,minBiasedHotHp,currentHotTarget=hp,biasedHp,target
 				end
 			elseif blacklistFlag then
@@ -83,7 +104,7 @@ function GetHealTarget(targetList,healSpell,healIcon)
 					minBlacklistTime=info.blacklist
 					currentTarget=target
 					minHp=hp
-					if healIcon and not BuffCheck(target,healIcon) then
+					if healIcon and not ryn.BuffCheck(target,healIcon) then
 						currentHotTarget=target
 						minHotHp=hp
 					end
@@ -95,13 +116,13 @@ function GetHealTarget(targetList,healSpell,healIcon)
 	return currentTarget,minHp,currentHotTarget,minHotHp
 end
 
-function GetDispelTarget(targetList,dispelSpell,dispelTypes,dispelByHp)
-	ClearFriendlyTarget()
+ryn.GetDispelTarget=function(targetList,dispelSpell,dispelTypes,dispelByHp)
+	ryn.ClearFriendlyTarget()
 	CastSpellByName(dispelSpell)
 	local currentTarget,topPriority,debuffType,currentDebuffType
-	local blacklistFlag,minBlacklistTime=true,nil
+	local blacklistFlag,minBlacklistTime=ryn.retryBlacklist,nil
 	for target,info in pairs(targetList) do
-		if IsValidSpellTarget(target) then
+		if ryn.IsValidSpellTarget(target) then
 			for i=1,16 do
 				_,_,debuffType=UnitDebuff(target,i,1)
 				if not debuffType or dispelTypes[debuffType] then
@@ -140,11 +161,11 @@ function GetDispelTarget(targetList,dispelSpell,dispelTypes,dispelByHp)
 end
 
 -- SEVEN PARAMETERS!!! YEP!!!!!!!!!!!!!!!!44444four
-function GetHealOrDispelTarget(targetList,healSpell,healIcon,dispelSpell,dispelTypes,dispelByHp,dispelHpThreshold)
+ryn.GetHealOrDispelTarget=function(targetList,healSpell,healIcon,dispelSpell,dispelTypes,dispelByHp,dispelHpThreshold)
 	local dispelTarget,debuffType,action
-	local healTarget,minHp,healHotTarget,minHotHp=GetHealTarget(targetList,healSpell,healIcon)
+	local healTarget,minHp,healHotTarget,minHotHp=ryn.GetHealTarget(targetList,healSpell,healIcon)
 	if not healTarget or minHp>dispelHpThreshold then
-		dispelTarget,debuffType=GetDispelTarget(targetList,dispelSpell,dispelTypes,dispelByHp)
+		dispelTarget,debuffType=ryn.GetDispelTarget(targetList,dispelSpell,dispelTypes,dispelByHp)
 		if dispelTarget then
 			action="dispel"
 		else
@@ -159,44 +180,44 @@ function GetHealOrDispelTarget(targetList,healSpell,healIcon,dispelSpell,dispelT
 	return dispelTarget,debuffType,nil,nil,action
 end
 
-function HealInterrupt(target,finish,hpThreshold)
-	if not stopCastingDelayExpire then
-		if precastHpThreshold then -- Precast
+ryn.HealInterrupt=function(target,finish,hpThreshold)
+	if not ryn.stopCastingDelayExpire then
+		if ryn.precastHpThreshold then -- Precast
 			if not UnitExists(target) or not UnitIsFriend("player",target) or
-			finish-precastInterruptWindow<GetTime() and not HpLower(target,hpThreshold) then
+			finish and finish-ryn.precastInterruptWindow<GetTime() and not ryn.HpLower(target,hpThreshold) then
 				SpellStopCasting()
 				--Debug("Precast interrupt!")
-				stopCastingDelayExpire=GetTime()+stopCastingDelay
+				ryn.stopCastingDelayExpire=GetTime()+ryn.stopCastingDelay
 			end
 		elseif target then -- Overheal prevention
-			if UnitExists(target) and not HpLower(target,healInterruptThreshold) then
+			if UnitExists(target) and not ryn.HpLower(target,healInterruptThreshold) and
+			(not ryn.targetList.tank[target] or finish and finish-ryn.precastInterruptWindow<GetTime()) then
 				SpellStopCasting()
 				--Debug("Overheal interrupt!")
-				stopCastingDelayExpire=GetTime()+stopCastingDelay
+				ryn.stopCastingDelayExpire=GetTime()+ryn.stopCastingDelay
 			end
 		end
 	end
 end
 
-function GetActionSlots()
-	for lActionSlot = 1, 120 do
-		local lActionText = GetActionText(lActionSlot);
-		local lActionTexture = GetActionTexture(lActionSlot);
-		if lActionTexture then
-			local lMessage = "Slot " .. lActionSlot .. ": [" .. lActionTexture .. "]";
-			if lActionText then
-				lMessage = lMessage .. " \"" .. lActionText .. "\"";
-			end
-			DEFAULT_CHAT_FRAME:AddMessage(lMessage);
+ryn.BlacklistTarget=function(target)
+	if target then
+		local targetInfo=ryn.targetList.all[target]
+		if targetInfo then
+			Debug("Blacklisted "..targetInfo.name.."! ("..blacklistTime.."s)")
+			--if not targetInfo.blacklist then
+			--	SendChatMessage("Blacklisted "..targetInfo.name.."! ("..blacklistTime.."s)","SAY")
+			--end
+			targetInfo.blacklist=GetTime()+ryn.blacklistTime
 		end
 	end
 end
 
-function IsActionReady(actionSlot)
+ryn.IsActionReady=function(actionSlot)
 	return IsUsableAction(actionSlot) and GetActionCooldown(actionSlot)==0
 end
 
-function BuffCheck(target,buff)
+ryn.BuffCheck=function(target,buff)
 	local i=1
 	while UnitBuff(target,i)~=nil do
 		if buff==UnitBuff(target,i) then
@@ -207,28 +228,28 @@ function BuffCheck(target,buff)
 	return false
 end
 
-function CheckRaidIcon(target,icon)
+ryn.CheckRaidIcon=function(target,icon)
 	return UnitExists(target) and not UnitIsDead(target) and GetRaidTargetIndex(target)==icon
 end
 
-function IsCastingOrChanelling()
+ryn.IsCastingOrChanelling=function()
 	return CastingBarFrame.casting or CastingBarFrame.channeling
 end
 
-function SpellCastReady(spell,delay)
-	if not IsCastingOrChanelling() and GetSpellCooldownByName(spell)==0 and (not delay or delay<GetTime()) then
-		stopCastingDelayExpire=nil
-		precastHpThreshold=nil
+ryn.SpellCastReady=function(spell,delay)
+	if not ryn.IsCastingOrChanelling() and ryn.GetSpellCooldownByName(spell)==0 and (not delay or delay<GetTime()) then
+		ryn.stopCastingDelayExpire=nil
+		ryn.precastHpThreshold=nil
 		return true
 	end
 	return false
 end
 
-function TryTargetRaidIcon(icon,tabCount,tankTargetCheck)
-	if not CheckRaidIcon("target",icon) then
+ryn.TryTargetRaidIcon=function(icon,tabCount,tankTargetCheck)
+	if not ryn.CheckRaidIcon("target",icon) then
 		if tankTargetCheck then
-			for target,info in pairs(targetList.tank) do
-				if CheckRaidIcon(target.."target",icon) then
+			for target,info in pairs(ryn.targetList.tank) do
+				if ryn.CheckRaidIcon(target.."target",icon) then
 					AssistUnit(target)
 					return true
 				end
@@ -236,7 +257,7 @@ function TryTargetRaidIcon(icon,tabCount,tankTargetCheck)
 		end
 		for i=1,tabCount do
 			TargetNearestEnemy()
-			if CheckRaidIcon("target",icon) then
+			if ryn.CheckRaidIcon("target",icon) then
 				return true
 			end
 		end
@@ -246,24 +267,26 @@ function TryTargetRaidIcon(icon,tabCount,tankTargetCheck)
 	return false
 end
 
-function Dps(ClassDps)
-	if CheckRaidIcon("target",8) or CheckRaidIcon("target",7) then
-		ClassDps()
-	elseif dpsMode==1 then
-		if TryTargetRaidIcon(8,10,true) or TryTargetRaidIcon(7,10,true) then
-			ClassDps()
+ryn.GetHostileTarget=function()
+	if ryn.CheckRaidIcon("target",8) or ryn.CheckRaidIcon("target",7) then
+		return true
+	elseif ryn.dpsMode==1 then
+		if ryn.TryTargetRaidIcon(8,10,true) or ryn.TryTargetRaidIcon(7,10,true) then
+			return true
 		end
-	elseif dpsMode==2 then
-		if masterTarget then
-			AssistUnit(masterTarget)
+	elseif ryn.dpsMode==2 then
+		if ryn.masterTarget then
+			AssistUnit(ryn.masterTarget)
 			if UnitExists("target") and UnitCanAttack("player","target") then
-				ClassDps()
+				return true
 			end
 		end
 	end
+	return false
 end
 
-function SSCheck(targetList)
+ryn.SSCheck=function(lTargetList)
+	lTargetList=lTargetList or ryn.targetList.all
 	local chatType=nil
 	local nameString=""
 	local buffCount=0
@@ -272,8 +295,8 @@ function SSCheck(targetList)
 	else
 		chatType="PARTY"
 	end
-	for target,info in pairs(targetList) do
-		if BuffCheck(target,buffSoulstone) then
+	for target,info in pairs(lTargetList) do
+		if ryn.BuffCheck(target,ryn.buffSoulstone) then
 			buffCount=buffCount+1
 			nameString=nameString..info.name.." "
 		end
@@ -284,28 +307,28 @@ function SSCheck(targetList)
 	end
 end
 
-addOns={"Bartender2","Cartographer","!ImprovedErrorFrame","MobInfo2","!OmniCC","XPerl","XPerl_Options","XPerl_Party","XPerl_PartyPet","XPerl_Player","XPerl_PlayerPet"
+ryn.addOns={"Bartender2","Cartographer","!ImprovedErrorFrame","MobInfo2","!OmniCC","XPerl","XPerl_Options","XPerl_Party","XPerl_PartyPet","XPerl_Player","XPerl_PlayerPet"
 	,"XPerl_RaidAdmin","XPerl_RaidFrames","XPerl_RaidHelper","XPerl_Target","XPerl_TargetTarget","XLoot","ShaguDB","ShaguQuest","!Questie"
 }
 
-function RegularMode()
-	for i,addOn in ipairs(addOns) do
+ryn.RegularMode=function()
+	for i,addOn in ipairs(ryn.addOns) do
 		EnableAddOn(addOn)
 	end
 	ReloadUI()
 end
 
-function MinimalMode()
-	for i,addOn in ipairs(addOns) do
+ryn.MinimalMode=function()
+	for i,addOn in ipairs(ryn.addOns) do
 		DisableAddOn(addOn)
 	end
 	ReloadUI()
 end
 
-function SmartReload()
-	if UnitName("player")==masterName then
-		RegularMode()
+ryn.SmartReload=function()
+	if UnitName("player")==ryn.masterName then
+		ryn.RegularMode()
 	else
-		MinimalMode()
+		ryn.MinimalMode()
 	end
 end

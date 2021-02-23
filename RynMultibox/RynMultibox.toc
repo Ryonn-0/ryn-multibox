@@ -2,4 +2,13 @@
 ## Title: RynMultibox
 ## Notes: Some stuff I made.
 ## Author: Ryonn
-RynMultibox.xml
+RynMultibox.lua
+RynMultibox_Group.lua
+RynMultibox_Spell.lua
+Class\RynMultibox_Druid.lua
+Class\RynMultibox_Hunter.lua
+Class\RynMultibox_Mage.lua
+Class\RynMultibox_Paladin.lua
+Class\RynMultibox_Priest.lua
+Class\RynMultibox_Warlock.lua
+Class\RynMultibox_Warrior.lua

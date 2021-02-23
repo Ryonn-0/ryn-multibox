@@ -1,23 +1,10 @@
 -- Spell management
+
 -- TODO: Action slot mapping and pet abilities
-
 -- spellName -> {spellID,bookType,castTime,actionSlot}
-spellData={}
+local spellData={}
 
-spellCastTime={
-	-- Priest
-	["Lesser Heal(Rank 1)"]=1.5,
-	["Lesser Heal(Rank 2)"]=2,
-	["Lesser Heal(Rank 3)"]=2.5,
-	["Heal"]=2.5,
-	["Greater Heal"]=2.5,
-	["Flash Heal"]=1.5,
-	-- Paladin
-	["Holy Light"]=2.5,
-	["Flash of Light"]=1.5
-}
-
-function BuildSpellData()
+ryn.BuildSpellData=function()
 	local i=1
 	local maxSpell,maxRank=nil,nil
 	while true do
@@ -42,12 +29,6 @@ function BuildSpellData()
 				spellData[spellDataKey.."()"]=spellData[spellDataKey]
 			end
 		end
-		if spellCastTime[spellName.."("..spellRank..")"] then
-			spellData[spellDataKey].castTime=spellCastTime[spellName.."("..spellRank..")"]
-		elseif spellCastTime[spellName] then
-			spellData[spellDataKey].castTime=spellCastTime[spellName]
-		end
-		-- TODO: Cast time decreasing talents
 		i=i+1
 	end
 end
@@ -64,10 +45,6 @@ function GetSpellIdEntries(pSpellId)
 	end
 end
 
-function GetSpellCooldownByName(spellName)
+ryn.GetSpellCooldownByName=function(spellName)
 	return GetSpellCooldown(spellData[spellName].spellId,spellData[spellName].bookType)
-end
-
-function GetSpellCastTimeByName(spellName)
-	return spellData[spellName].castTime
 end
