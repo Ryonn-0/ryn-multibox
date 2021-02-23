@@ -90,7 +90,7 @@ function SetBias(bias,list,groupNum)
 			end
 		end
 	end
-	--Debug("New bias value set.")
+	--ryn.Debug("New bias value set.")
 end
 
 ryn.GetRole=function(name)
@@ -182,7 +182,7 @@ local function RegisterUnit(isRaid,raidOrUnitId)
 end
 
 local function GroupManagementHandler()
-	--Debug(event)
+	--ryn.Debug(event)
 	if not targetListReady then
 		ryn.BuildTargetList()
 	elseif event=="PLAYER_ENTERING_WORLD" or event=="RAID_ROSTER_UPDATE" and UnitInRaid("player") or event=="PARTY_MEMBERS_CHANGED" and not UnitInRaid("player") then
@@ -192,7 +192,7 @@ local function GroupManagementHandler()
 		if ryn.currentHealTarget then
 			local targetInfo=ryn.targetList.all[ryn.currentHealTarget]
 			if targetInfo then
-				Debug("Blacklisted "..targetInfo.name.."! ("..blacklistTime.."s)")
+				ryn.Debug("Blacklisted "..targetInfo.name.."! ("..blacklistTime.."s)")
 				--if not targetInfo.blacklist then
 				--	SendChatMessage("Blacklisted "..targetInfo.name.."! ("..blacklistTime.."s)","SAY")
 				--end
@@ -221,7 +221,7 @@ ryn.BuildTargetList=function()
 		partyToRaidChack=true
 		for i=1,40 do
 			if UnitName("raid"..i)=="Unknown" then
-				--Debug("Couldn't build target list. raid"..i.."'s name is unknown.")
+				--ryn.Debug("Couldn't build target list. raid"..i.."'s name is unknown.")
 				return
 			end
 			RegisterUnit(true,i)
@@ -230,13 +230,13 @@ ryn.BuildTargetList=function()
 		partyToRaidChack=false
 		RegisterUnit(false,"player")
 		if UnitName("player")=="Unknown" then
-			--Debug("Couldn't build target list. player's name is unknown.")
+			--ryn.Debug("Couldn't build target list. player's name is unknown.")
 			return
 		end
 		for i=1,GetNumPartyMembers() do
 			RegisterUnit(false,"party"..i)
 			if UnitName("party"..i)=="Unknown" then
-				--Debug("Couldn't build target list. party"..i.."'s name is unknown.")
+				--ryn.Debug("Couldn't build target list. party"..i.."'s name is unknown.")
 				return
 			end
 		end
@@ -244,84 +244,11 @@ ryn.BuildTargetList=function()
 	targetListReady=true
 	-- TODO: Put this somewhere else
 	ryn.BuildSpellData()
-	--Debug("Target list built")
-end
-
-ryn.UpdateTargetList=function()
-	targetListReady=false
-	if UnitInRaid("player") then
-		if not partyToRaidChack then
-			ryn.BuildTargetList()
-		else
-			for i=1,40 do
-				local uid="raid"..i
-				if UnitIsConnected(uid) then
-					currentTargetInfo=ryn.targetList.all[uid]
-					if UnitName(uid)=="Unknown" then
-						--Debug("Couldn't update target list. raid"..i.."'s name is unknown.")
-						return
-					end
-					if not currentTargetInfo then
-						RegisterUnit(1,i)
-						--Debug("Added new uid")
-					else
-						local unitName,_,unitGroup,_,_,unitClass=GetRaidRosterInfo(i)
-						if unitName~=currentTargetInfo.name then
-							UpdatePlayer(uid,currentTargetInfo,unitName,unitClass)
-							--Debug("Updated player info")
-						end
-						if unitGroup~=currentTargetInfo.group then
-							UpdateGroup(uid,currentTargetInfo,unitGroup)
-							--Debug("Updated player group")
-						end
-					end
-				else
-					if ryn.targetList.all[uid] then
-						RemoveUid(uid)
-						--Debug("Removed unused uid")
-					end
-				end
-			end
-			--Debug("Target list updated")
-		end
-	else
-		if partyToRaidChack then
-			ryn.BuildTargetList()
-		else
-			for i=1,GetNumPartyMembers() do
-				local uid="party"..i
-				if UnitIsConnected(uid) then
-					if UnitName(uid)=="Unknown" then
-						--Debug("Couldn't update target list. party"..i.."'s name is unknown.")
-						return
-					end
-					currentTargetInfo=ryn.targetList.all[uid]
-					if not currentTargetInfo then
-						RegisterUnit(false,uid)
-						--Debug("Added new uid")
-					else
-						local unitName=UnitName(uid)
-						local _,unitClass=UnitClass(uid)
-						if unitName~=currentTargetInfo.name then
-							UpdatePlayer(uid,currentTargetInfo,unitName,unitClass)
-							--Debug("Updated player info")
-						end
-					end
-				else
-					if ryn.targetList.all[uid] then
-						RemoveUid(uid)
-						--Debug("Removed unused uid")
-					end
-				end
-			end
-			--Debug("Target list updated")
-		end
-	end
-	targetListReady=true
+	--ryn.Debug("Target list built")
 end
 
 local function UpdatePlayer(uid,info,name,class)
-	local role=GetRole(name)
+	local role=ryn.GetRole(name)
 	local oldRole=info.role
 	local oldName=info.name
 	local ownName=UnitName("player")
@@ -424,6 +351,79 @@ local function RemoveUid(uid)
 	end
 end
 
+ryn.UpdateTargetList=function()
+	targetListReady=false
+	if UnitInRaid("player") then
+		if not partyToRaidChack then
+			ryn.BuildTargetList()
+		else
+			for i=1,40 do
+				local uid="raid"..i
+				if UnitIsConnected(uid) then
+					currentTargetInfo=ryn.targetList.all[uid]
+					if UnitName(uid)=="Unknown" then
+						--ryn.Debug("Couldn't update target list. raid"..i.."'s name is unknown.")
+						return
+					end
+					if not currentTargetInfo then
+						RegisterUnit(1,i)
+						--ryn.Debug("Added new uid")
+					else
+						local unitName,_,unitGroup,_,_,unitClass=GetRaidRosterInfo(i)
+						if unitName~=currentTargetInfo.name then
+							UpdatePlayer(uid,currentTargetInfo,unitName,unitClass)
+							--ryn.Debug("Updated player info")
+						end
+						if unitGroup~=currentTargetInfo.group then
+							UpdateGroup(uid,currentTargetInfo,unitGroup)
+							--ryn.Debug("Updated player group")
+						end
+					end
+				else
+					if ryn.targetList.all[uid] then
+						RemoveUid(uid)
+						--ryn.Debug("Removed unused uid")
+					end
+				end
+			end
+			--ryn.Debug("Target list updated")
+		end
+	else
+		if partyToRaidChack then
+			ryn.BuildTargetList()
+		else
+			for i=1,GetNumPartyMembers() do
+				local uid="party"..i
+				if UnitIsConnected(uid) then
+					if UnitName(uid)=="Unknown" then
+						--ryn.Debug("Couldn't update target list. party"..i.."'s name is unknown.")
+						return
+					end
+					currentTargetInfo=ryn.targetList.all[uid]
+					if not currentTargetInfo then
+						RegisterUnit(false,uid)
+						--ryn.Debug("Added new uid")
+					else
+						local unitName=UnitName(uid)
+						local _,unitClass=UnitClass(uid)
+						if unitName~=currentTargetInfo.name then
+							UpdatePlayer(uid,currentTargetInfo,unitName,unitClass)
+							--ryn.Debug("Updated player info")
+						end
+					end
+				else
+					if ryn.targetList.all[uid] then
+						RemoveUid(uid)
+						--ryn.Debug("Removed unused uid")
+					end
+				end
+			end
+			--ryn.Debug("Target list updated")
+		end
+	end
+	targetListReady=true
+end
+
 ryn.PrintTargetList=function(lTargetList)
 	lTargetList=lTargetList or ryn.targetList.all
 	DEFAULT_CHAT_FRAME:AddMessage("Target list:")
@@ -432,7 +432,7 @@ ryn.PrintTargetList=function(lTargetList)
 		DEFAULT_CHAT_FRAME:AddMessage(uid.." | "..info.name.." | "..info.role.." | "..info.class.." | group"..info.group.." | "..info.bias)
 		count=count+1
 	end
-	Debug("Players in target list: "..count)
+	ryn.Debug("Players in target list: "..count)
 end
 
 ryn.PrintTargetLists=function()
@@ -466,5 +466,5 @@ ryn.PrintPlayerLists=function()
 			end
 		end
 	end
-	Debug("Total player target lists: "..tlCount..", non-empty: "..realTlCount)
+	ryn.Debug("Total player target lists: "..tlCount..", non-empty: "..realTlCount)
 end

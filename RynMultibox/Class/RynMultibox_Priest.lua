@@ -160,7 +160,7 @@ ryn.dispelDisease={Disease=true}
 
 ryn.Dispel=function(lTargetList,dispelTypes,dispelByHp)
 	lTargetList=lTargetList or ryn.targetList.all
-	dispelTypes=dispelTypes or dispelAll
+	dispelTypes=dispelTypes or ryn.dispelAll
 	dispelByHp=dispelByHp or false
 	if ryn.SpellCastReady(class.dispelRange) then
 		local target,debuffType=ryn.GetDispelTarget(lTargetList,class.dispelRange,dispelAll,false)
@@ -171,7 +171,7 @@ end
 ryn.HealOrDispel=function(lTargetList,healProfile,dispelTypes,dispelByHp,dispelHpThreshold)
 	lTargetList=lTargetList or ryn.targetList.all
 	healProfile=healProfile or "regular"
-	dispelTypes=dispelTypes or dispelAll
+	dispelTypes=dispelTypes or ryn.dispelAll
 	dispelByHp=dispelByHp or false
 	dispelHpThreshold=dispelHpThreshold or 0.4
 	if ryn.SpellCastReady(class.healRange,stopCastingDelayExpire) then

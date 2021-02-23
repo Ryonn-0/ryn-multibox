@@ -159,7 +159,7 @@ end
 
 class.DispelTarget=function(target)
 	if target then
-		targetList.all[target].blacklist=nil
+		ryn.targetList.all[target].blacklist=nil
 		ryn.currentHealTarget=target
 		CastSpellByName("Cleanse")
 		SpellTargetUnit(target)
@@ -237,7 +237,7 @@ ryn.dispelNoPoison={Magic=true,Disease=true}
 
 ryn.Dispel=function(lTargetList,dispelTypes,dispelByHp)
 	lTargetList=lTargetList or ryn.targetList.all
-	dispelTypes=dispelTypes or class.dispelAll
+	dispelTypes=dispelTypes or ryn.dispelAll
 	dispelByHp=dispelByHp or false
 	if ryn.SpellCastReady(class.dispelRange) then
 		local target=ryn.GetDispelTarget(lTargetList,class.dispelRange,dispelTypes,dispelByHp)
@@ -248,7 +248,7 @@ end
 ryn.HealOrDispel=function(lTargetList,healProfile,dispelTypes,dispelByHp,dispelHpThreshold)
 	lTargetList=lTargetList or ryn.targetList.all
 	healProfile=healProfile or "regular"
-	dispelTypes=dispelTypes or class.dispelAll
+	dispelTypes=dispelTypes or ryn.dispelAll
 	dispelByHp=dispelByHp or false
 	dispelHpThreshold=dispelHpThreshold or 0.4
 	if ryn.SpellCastReady(class.healRange,ryn.stopCastingDelayExpire) then
@@ -256,7 +256,7 @@ ryn.HealOrDispel=function(lTargetList,healProfile,dispelTypes,dispelByHp,dispelH
 		if action=="heal" then
 			class.HealTarget(healProfile,target,hpOrDebuffType)
 		else
-			class.DispelTarget(target,hpOrDebuffType)
+			class.DispelTarget(target)
 		end
 	else
 		ryn.HealInterrupt(ryn.currentHealTarget,ryn.currentHealFinish,ryn.precastHpThreshold)

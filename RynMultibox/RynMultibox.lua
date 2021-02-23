@@ -190,7 +190,7 @@ ryn.HealInterrupt=function(target,finish,hpThreshold)
 				ryn.stopCastingDelayExpire=GetTime()+ryn.stopCastingDelay
 			end
 		elseif target then -- Overheal prevention
-			if UnitExists(target) and not ryn.HpLower(target,healInterruptThreshold) and
+			if UnitExists(target) and not ryn.HpLower(target,ryn.healInterruptThreshold) and
 			(not ryn.targetList.tank[target] or finish and finish-ryn.precastInterruptWindow<GetTime()) then
 				SpellStopCasting()
 				--Debug("Overheal interrupt!")
@@ -204,9 +204,9 @@ ryn.BlacklistTarget=function(target)
 	if target then
 		local targetInfo=ryn.targetList.all[target]
 		if targetInfo then
-			Debug("Blacklisted "..targetInfo.name.."! ("..blacklistTime.."s)")
+			ryn.Debug("Blacklisted "..targetInfo.name.."! ("..ryn.blacklistTime.."s)")
 			--if not targetInfo.blacklist then
-			--	SendChatMessage("Blacklisted "..targetInfo.name.."! ("..blacklistTime.."s)","SAY")
+			--	SendChatMessage("Blacklisted "..targetInfo.name.."! ("..ryn.blacklistTime.."s)","SAY")
 			--end
 			targetInfo.blacklist=GetTime()+ryn.blacklistTime
 		end
