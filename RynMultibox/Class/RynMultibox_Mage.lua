@@ -39,7 +39,13 @@ end
 
 ryn.Dps=function()
 	if not ryn.IsCastingOrChanelling() and ryn.GetHostileTarget() then
-		CastSpellByName("Frostbolt")
+		if ryn.damageType.frost then
+			CastSpellByName("Frostbolt")
+		elseif ryn.damageType.fire then
+			CastSpellByName("Fireball")
+		elseif ryn.damageType.arcane then
+			CastSpellByName("Arcane Missiles")
+		end
 	end
 	-- TODO: Evocation, mana gem and wanding.
 end

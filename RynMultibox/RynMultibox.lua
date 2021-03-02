@@ -13,6 +13,8 @@ ryn.blacklistTime=10
 ryn.retryBlacklist=true
 -- true: Try to heal/dispel blacklisted players, when no non-blacklisted player needs healing/dispelling.
 -- false: Blacklisted players won't get heals/dispels until blacklist time expires.
+ryn.aoeEnabled=true
+ryn.damageType={arcane=true,fire=true,frost=true,holy=true,melee=true,nature=true,ranged=true,shadow=true}
 
 -- Addon global variables
 _,ryn.playerClass=UnitClass("player")
@@ -186,14 +188,14 @@ ryn.HealInterrupt=function(target,finish,hpThreshold)
 			if not UnitExists(target) or not UnitIsFriend("player",target) or
 			finish and finish-ryn.precastInterruptWindow<GetTime() and not ryn.HpLower(target,hpThreshold) then
 				SpellStopCasting()
-				--Debug("Precast interrupt!")
+				--ryn.Debug("Precast interrupt!")
 				ryn.stopCastingDelayExpire=GetTime()+ryn.stopCastingDelay
 			end
-		elseif target then -- Overheal prevention
+		elseif target and finish then -- Overheal prevention
 			if UnitExists(target) and not ryn.HpLower(target,ryn.healInterruptThreshold) and
-			(not ryn.targetList.tank[target] or finish and finish-ryn.precastInterruptWindow<GetTime()) then
+			(not ryn.targetList.tank[target] or finish-ryn.precastInterruptWindow<GetTime()) then
 				SpellStopCasting()
-				--Debug("Overheal interrupt!")
+				--ryn.Debug("Overheal interrupt!")
 				ryn.stopCastingDelayExpire=GetTime()+ryn.stopCastingDelay
 			end
 		end
@@ -223,7 +225,18 @@ ryn.BuffCheck=function(target,buff)
 		if buff==UnitBuff(target,i) then
 			return true
 		end
-		i=i+1;
+		i=i+1
+	end
+	return false
+end
+
+ryn.DebuffCheck=function(target,debuff)
+	local i=1
+	while UnitDebuff(target,i)~=nil do
+		if debuff==UnitDebuff(target,i) then
+			return true
+		end
+		i=i+1
 	end
 	return false
 end
@@ -268,10 +281,10 @@ ryn.TryTargetRaidIcon=function(icon,tabCount,tankTargetCheck)
 end
 
 ryn.GetHostileTarget=function()
-	if ryn.CheckRaidIcon("target",8) or ryn.CheckRaidIcon("target",7) then
+	if ryn.CheckRaidIcon("target",8) and UnitCanAttack("player","target") or ryn.CheckRaidIcon("target",7) and UnitCanAttack("player","target") then
 		return true
 	elseif ryn.dpsMode==1 then
-		if ryn.TryTargetRaidIcon(8,10,true) or ryn.TryTargetRaidIcon(7,10,true) then
+		if ryn.TryTargetRaidIcon(8,10,true) and UnitCanAttack("player","target") or ryn.TryTargetRaidIcon(7,10,true) and UnitCanAttack("player","target") then
 			return true
 		end
 	elseif ryn.dpsMode==2 then

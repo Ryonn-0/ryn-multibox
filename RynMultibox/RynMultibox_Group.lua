@@ -1,7 +1,7 @@
 -- Group management
 
 local nameList={
-	tank={"Harklen","Gaelber","Llanewrynn","Stardancer","Cooperbeard","Naderius","Dobzse","Obier","Yxon","Amonstenn","Fierileya"},
+	tank={"Harklen","Gaelber","Llanewrynn","Stardancer","Cooperbeard","Naderius","Dobzse","Obier","Yxon","Amonstenn","Fierileya","Peacebringer"},
 	heal={"Alaniel","Flo","Livia","Hoyt","Myra","Papsajt","Negreanu","Kearlah","Azure","Warrógép","Rhodelya"},
 	multiHeal={
 	"Paladino","Dreamblast","Skyx","Uyalin","Illumyn", -- Kearlah
@@ -65,7 +65,7 @@ end
 
 -- This function should be used in SuperMacro's extended LUA code fields, to easily manage healing biases per healer.
 -- I could set biasList as a saved variable, might do it later, but since the addon doesn't have ui elements, the method above is more comfortable to use.
-function SetBias(bias,list,groupNum)
+ryn.SetBias=function(bias,list,groupNum)
 	local oldBias
 	if list=="group" then
 		oldBias=biasList.group[groupNum]
@@ -187,20 +187,6 @@ local function GroupManagementHandler()
 		ryn.BuildTargetList()
 	elseif event=="PLAYER_ENTERING_WORLD" or event=="RAID_ROSTER_UPDATE" and UnitInRaid("player") or event=="PARTY_MEMBERS_CHANGED" and not UnitInRaid("player") then
 		ryn.UpdateTargetList()
-	-- TODO: Refactor
-	elseif event=="UI_ERROR_MESSAGE" and arg1 and arg1=="Target not in line of sight" then
-		if ryn.currentHealTarget then
-			local targetInfo=ryn.targetList.all[ryn.currentHealTarget]
-			if targetInfo then
-				ryn.Debug("Blacklisted "..targetInfo.name.."! ("..blacklistTime.."s)")
-				--if not targetInfo.blacklist then
-				--	SendChatMessage("Blacklisted "..targetInfo.name.."! ("..blacklistTime.."s)","SAY")
-				--end
-				targetInfo.blacklist=GetTime()+ryn.blacklistTime
-			end
-		end
-	elseif event=="SPELLCAST_START" then
-		ryn.currentHealFinish=GetTime()+arg2/1000
 	end
 end
 
@@ -242,7 +228,7 @@ ryn.BuildTargetList=function()
 		end
 	end
 	targetListReady=true
-	-- TODO: Put this somewhere else
+	-- TODO: Make an event handler for spell management, this line should go there.
 	ryn.BuildSpellData()
 	--ryn.Debug("Target list built")
 end

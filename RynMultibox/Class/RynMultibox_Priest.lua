@@ -6,6 +6,7 @@ class={}
 class.buffAbolishDisease="Interface\\Icons\\Spell_Nature_NullifyDisease"
 class.buffRenew="Interface\\Icons\\Spell_Holy_Renew"
 class.buffInnerFocus="Interface\\Icons\\Spell_Frost_WindWalkOn"
+class.debuffWeakenedSoul="Interface\\Icons\\Spell_Holy_AshesToAshes"
 
 class.healRange="Lesser Heal(Rank 1)"
 class.dispelRange="Cure Disease"
@@ -75,7 +76,10 @@ class.HealTarget=function(healProfile,target,hp,hotTarget,hotHp,aoeInfo)
 			currentHealFinish=nil
 			if mana>=manaCost and (not withCdOnly or ryn.BuffCheck("player",class.buffInnerFocus)) and ryn.GetSpellCooldownByName(spellName)==0 then
 				if (not healMode or healMode==1) and target and hp<hpThreshold and (not lTargetList or lTargetList[target]) then
-					--Debug("Executing heal profile \""..healProfile.."\", entry: "..i)
+					--ryn.Debug("Executing heal profile \""..healProfile.."\", entry: "..i)
+					if strfind(spellName,"Power Word: Shield",1,1) and ryn.DebuffCheck(target,class.debuffWeakenedSoul) then
+						break
+					end
 					ryn.targetList.all[target].blacklist=nil
 					ryn.currentHealTarget=target
 					CastSpellByName(spellName)
@@ -84,7 +88,7 @@ class.HealTarget=function(healProfile,target,hp,hotTarget,hotHp,aoeInfo)
 				elseif healMode==2 then
 					if ryn.CheckRaidIcon("target",8) or ryn.CheckRaidIcon("target",7) or ryn.TryTargetRaidIcon(8,10,true) or ryn.TryTargetRaidIcon(7,10,true) then
 						if UnitExists("targettarget") and UnitIsFriend("player","targettarget") then
-							--Debug("Executing heal profile \""..healProfile.."\", entry: "..i)
+							--ryn.Debug("Executing heal profile \""..healProfile.."\", entry: "..i)
 							ryn.currentHealTarget=ryn.GetGroupId("targettarget") or "targettarget"
 							ryn.precastHpThreshold=hpThreshold
 							CastSpellByName(spellName)
@@ -93,14 +97,14 @@ class.HealTarget=function(healProfile,target,hp,hotTarget,hotHp,aoeInfo)
 					end
 					break
 				elseif healMode==3 and hotTarget and hotHp<hpThreshold and (not lTargetList or lTargetList[hotTarget]) then
-					--Debug("Executing heal profile \""..healProfile.."\", entry: "..i)
+					--ryn.Debug("Executing heal profile \""..healProfile.."\", entry: "..i)
 					ryn.targetList.all[target].blacklist=nil
 					ryn.currentHealTarget=hotTarget
 					CastSpellByName(spellName)
 					SpellTargetUnit(hotTarget)
 					break
 				elseif healMode==4 and aoeInfo[class.aoeHealMinPlayers] and aoeInfo[class.aoeHealMinPlayers].hpRatio<hpThreshold then
-					--Debug("Executing heal profile \""..healProfile.."\", entry: "..i)
+					--ryn.Debug("Executing heal profile \""..healProfile.."\", entry: "..i)
 					ryn.currentHealTarget=nil
 					CastSpellByName(spellName)
 					break
@@ -114,6 +118,7 @@ class.DispelTarget=function(target,debuffType)
 	if target then
 		ryn.targetList.all[target].blacklist=nil
 		ryn.currentHealTarget=target
+		ryn.currentHealFinish=nil
 		if debuffType=="Magic" then
 			ClearTarget()
 			CastSpellByName("Dispel Magic")

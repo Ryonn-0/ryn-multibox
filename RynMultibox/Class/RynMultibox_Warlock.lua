@@ -13,13 +13,13 @@ ryn.Buff=function(lTargetList)
 	if not HasPetUI() then
 		if UnitMana("player")>=1098 then
 			CastSpellByName("Summon Imp")
-		else
+		elseif not ryn.HpLower("player",0.4) then
 			CastSpellByName("Life Tap")
 		end
 	elseif not ryn.BuffCheck("player",class.buffDemon) then
 		if UnitMana("player")>=1580 then
 			CastSpellByName("Demon Armor")
-		else
+		elseif not ryn.HpLower("player",0.4) then
 			CastSpellByName("Life Tap")
 		end
 	end
@@ -33,12 +33,12 @@ end
 
 ryn.CC=function()
 	if not ryn.IsCastingOrChanelling() and ryn.TryTargetRaidIcon(5,10,true) then
-		local unitType=UnitCreatureType("target")
-		if UnitMana("player")>=200 and (unitType=="Elemental" or unitType=="Demon") then
+		local unitType,mana=UnitCreatureType("target"),UnitMana("player")
+		if mana>=200 and (unitType=="Elemental" or unitType=="Demon") then
 			CastSpellByName("Banish")
-		elseif UnitMana("player")>=205 then
+		elseif mana>=205 then
 			CastSpellByName("Fear")
-		else
+		elseif not ryn.HpLower("player",0.4) then
 			CastSpellByName("Life Tap")
 		end
 	end
@@ -46,10 +46,23 @@ end
 
 ryn.Dps=function()
 	if not ryn.IsCastingOrChanelling() and ryn.GetHostileTarget() then
-		if UnitMana("player")>=372 then
-		--if UnitMana("player")>=2000 then
-			CastSpellByName("Shadow Bolt")
-		else
+		local mana,noMana=UnitMana("player"),false
+		if ryn.damageType.shadow then
+			if mana>=372 then
+				CastSpellByName("Shadow Bolt")
+				return
+			else
+				noMana=true
+			end
+		elseif ryn.damageType.fire then
+			if mana>=168 then
+				CastSpellByName("Searing Pain")
+				return
+			else
+				noMana=true
+			end
+		end
+		if noMana and not ryn.HpLower("player",0.4) then
 			CastSpellByName("Life Tap")
 		end
 	end
@@ -61,7 +74,7 @@ ryn.DrainSoul=function()
 		if ryn.HpLower("target",0.3) then
 			if UnitMana("player")>=290 then
 				CastSpellByName("Drain Soul")
-			else
+			elseif not ryn.HpLower("player",0.4) then
 				CastSpellByName("Life Tap")
 			end
 		else

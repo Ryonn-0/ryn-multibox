@@ -11,17 +11,19 @@ class.sunderArmorActionSlot=88
 class.rageBuffer=0
 
 ryn.TankDps=function()
-	local rage=UnitMana("player")
-	if rage>=35+class.rageBuffer and not IsCurrentAction(class.heroicStrikeActionSlot) then
-		CastSpellByName("Heroic Strike")
-	elseif rage>=5+class.rageBuffer and ryn.IsActionReady(class.revengeActionSlot) then
-		CastSpellByName("Revenge")
-	elseif rage>=20+class.rageBuffer and ryn.IsActionReady(class.shieldSlamActionSlot) then
-		CastSpellByName("Shield Slam")
-	elseif rage>=12+class.rageBuffer and ryn.IsActionReady(class.sunderArmorActionSlot) then
-		CastSpellByName("Sunder Armor")
-	elseif not IsCurrentAction(class.autoAttackActionSlot) then
-		CastSpellByName("Attack")
+	if ryn.damageType.melee then
+		local rage=UnitMana("player")
+		if rage>=35+class.rageBuffer and not IsCurrentAction(class.heroicStrikeActionSlot) then
+			CastSpellByName("Heroic Strike")
+		elseif rage>=5+class.rageBuffer and ryn.IsActionReady(class.revengeActionSlot) then
+			CastSpellByName("Revenge")
+		elseif rage>=20+class.rageBuffer and ryn.IsActionReady(class.shieldSlamActionSlot) then
+			CastSpellByName("Shield Slam")
+		elseif rage>=12+class.rageBuffer and ryn.IsActionReady(class.sunderArmorActionSlot) then
+			CastSpellByName("Sunder Armor")
+		elseif not IsCurrentAction(class.autoAttackActionSlot) then
+			CastSpellByName("Attack")
+		end
 	end
 end
 

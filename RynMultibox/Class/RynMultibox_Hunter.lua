@@ -8,7 +8,6 @@ class.buffTrueshot="Interface\\Icons\\Ability_TrueShot"
 class.debuffMark="Interface\\Icons\\Ability_Hunter_SniperShot"
 
 -- Settings
-class.multiShotEnabled=true
 class.aimedShotWindow=1 -- low value, with 3.0+ ranged attack speed (full/auto shot rotation), or a higher value with 2.9- ranged attack speed (clipped/aimed shot rotation)
 class.multiShotWindow=1.6 -- should be around ranged attack speed minus 1
 
@@ -58,10 +57,10 @@ class.RangedDps=function()
 		return
 	end
 	if not IsCurrentAction(class.aimedShotActionSlot) and not IsCurrentAction(class.multiShotActionSlot) then
-		if class.aimedShotExpire>=GetTime() and IsActionReady(class.aimedShotActionSlot) then
+		if class.aimedShotExpire>=GetTime() and ryn.IsActionReady(class.aimedShotActionSlot) then
 			CastSpellByName("Aimed Shot")
 			class.ignoreNext=true
-		elseif class.multiShotEnabled and class.multiShotExpire>=GetTime() and IsActionReady(class.multiShotActionSlot) then
+		elseif ryn.aoeEnabled and class.multiShotExpire>=GetTime() and ryn.IsActionReady(class.multiShotActionSlot) then
 			CastSpellByName("Multi-Shot")
 			class.ignoreNext=true
 		end
@@ -80,9 +79,9 @@ end
 
 ryn.Dps=function()
 	if ryn.GetHostileTarget() then
-		if IsActionInRange(class.autoShotActionSlot)==1 then
+		if ryn.damageType.ranged and IsActionInRange(class.autoShotActionSlot)==1 then
 			class.RangedDps()
-		elseif IsActionInRange(class.mongooseBiteActionSlot)==1 then
+		elseif ryn.damageType.melee and IsActionInRange(class.mongooseBiteActionSlot)==1 then
 			class.MeleeDps()
 		end
 	end

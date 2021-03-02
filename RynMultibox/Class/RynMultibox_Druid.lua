@@ -118,7 +118,11 @@ ryn.Dps=function()
 	if not class.IsMoonkin() then
 		CastShapeshiftForm(5)
 	elseif not ryn.IsCastingOrChanelling() and ryn.GetHostileTarget() then
-		CastSpellByName("Starfire")
+		if ryn.damageType.arcane then
+			CastSpellByName("Starfire")
+		elseif ryn.damageType.nature then
+			CastSpellByName("Wrath")
+		end
 	end
 end
 

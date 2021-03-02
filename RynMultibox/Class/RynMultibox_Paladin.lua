@@ -134,7 +134,7 @@ class.HealTarget=function(healProfile,target,hp)
 			ryn.currentHealFinish=nil
 			if mana>=manaCost and (not withCdOnly or ryn.BuffCheck("player",class.buffDivineFavor)) and ryn.GetSpellCooldownByName(spellName)==0 then
 				if (not healMode or healMode==1) and target and hp<hpThreshold and (not lTargetList or lTargetList[target]) then
-					--Debug("Executing heal profile \""..healProfile.."\", entry: "..i)
+					--ryn.Debug("Executing heal profile \""..healProfile.."\", entry: "..i)
 					ryn.targetList.all[target].blacklist=nil
 					ryn.currentHealTarget=target
 					CastSpellByName(spellName)
@@ -143,7 +143,7 @@ class.HealTarget=function(healProfile,target,hp)
 				elseif healMode==2 then
 					if ryn.CheckRaidIcon("target",8) or ryn.CheckRaidIcon("target",7) or ryn.TryTargetRaidIcon(8,10,true) or ryn.TryTargetRaidIcon(7,10,true) then
 						if UnitExists("targettarget") and UnitIsFriend("player","targettarget") then
-							--Debug("Executing heal profile \""..healProfile.."\", entry: "..i)
+							--ryn.Debug("Executing heal profile \""..healProfile.."\", entry: "..i)
 							ryn.currentHealTarget=ryn.GetGroupId("targettarget") or "targettarget"
 							ryn.precastHpThreshold=hpThreshold
 							CastSpellByName(spellName)
@@ -161,6 +161,7 @@ class.DispelTarget=function(target)
 	if target then
 		ryn.targetList.all[target].blacklist=nil
 		ryn.currentHealTarget=target
+		ryn.currentHealFinish=nil
 		CastSpellByName("Cleanse")
 		SpellTargetUnit(target)
 	end

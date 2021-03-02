@@ -1,7 +1,7 @@
 -- Spell management
 
 -- TODO: Action slot mapping and pet abilities
--- spellName -> {spellID,bookType,castTime,actionSlot}
+-- spellName -> {spellID,bookType}
 local spellData={}
 
 ryn.BuildSpellData=function()
@@ -33,7 +33,7 @@ ryn.BuildSpellData=function()
 	end
 end
 
-function GetSpellIdEntries(pSpellId)
+ryn.GetSpellIdEntries=function(pSpellId)
 	for name,info in pairs(spellData) do
 		if not pSpellId or info.spellId==pSpellId then
 			local s=info.spellId..": "..name
