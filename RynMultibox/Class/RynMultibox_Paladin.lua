@@ -37,13 +37,13 @@ class.buffProfiles={
 	greaterLight={"Greater Blessing of Light",class.buffGreaterLight,{},{}}
 }
 class.buffCustom={
-	Harklen={"Blessing of Light",class.buffLight},
-	Ryonn={"Blessing of Wisdom",class.buffWisdom},
-	Inochi={"Blessing of Wisdom",class.buffWisdom},
-	Nymira={"Blessing of Salvation",class.buffSalvation},
-	Seloris={"Blessing of Salvation",class.buffSalvation},
-	Alaniel={"Blessing of Wisdom",class.buffWisdom},
-	Arvene={"Blessing of Wisdom",class.buffSalvation}
+	Harklen={"Greater Blessing of Light",class.buffGreaterLight},
+	Ryonn={"Greater Blessing of Wisdom",class.buffGreaterWisdom},
+	Inochi={"Greater Blessing of Wisdom",class.buffGreaterWisdom},
+	Nymira={"Greater Blessing of Salvation",class.buffGreaterSalvation},
+	Seloris={"Greater Blessing of Salvation",class.buffGreaterSalvation},
+	Alaniel={"Greater Blessing of Wisdom",class.buffGreaterWisdom},
+	Arvene={"Greater Blessing of Salvation",class.buffGreaterSalvation}
 }
 
 -- NOTE: Do NOT use nil if you want to omit a heal profile entry parameter, use false instead.
@@ -65,7 +65,7 @@ class.buffCustom={
 
 -- targetList:
 -- Only heal, when the selected heal target is in this target list. Only Direct and HoT heal modes check this.
--- Default: targetList.all
+-- Default: "all"
 
 -- withCdOnly:
 -- If true, only heal, when a class specific healing cooldown is active: Priest: Inner Focus, Paladin: Divine Favor, Druid: Nature's Swiftness.
@@ -84,29 +84,26 @@ class.healProfiles={
 		{0.9 , 140, "Flash of Light",2}
 	},
 	hlTankOnly={
-		{0.4 , 720, "Divine Favor",1,ryn.targetList.tank},
-		{0.4 , 660, "Holy Light",1,ryn.targetList.tank},
+		{0.4 , 720, "Divine Favor",1,"tank"},
+		{0.4 , 660, "Holy Light",1,"tank"},
 		{0.6 , 140, "Flash of Light"},
 		{0.8 , 70 , "Flash of Light(Rank 3)"},
 		{0.9 , 35 , "Flash of Light(Rank 1)"},
 		{0.9 , 140, "Flash of Light",2}
 	},
 	low={
-		{0.4 , 720, "Divine Favor",1,ryn.targetList.tank},
-		{0.4 , 660, "Holy Light",1,ryn.targetList.tank,true},
+		{0.4 , 720, "Divine Favor",1,"tank"},
+		{0.4 , 660, "Holy Light",1,"tank",true},
 		{0.6 , 70 , "Flash of Light(Rank 5)"},
 		{0.8 , 50 , "Flash of Light(Rank 3)"},
 		{0.9 , 35 , "Flash of Light(Rank 1)"},
 		{0.9 , 35 , "Flash of Light(Rank 1)",2}
 	},
 	UNLIMITEDPOWER={
-		{0.5 , 0  , "Holy Light",1,ryn.targetList.tank},
+		{0.5 , 0  , "Holy Light",1,"tank"},
 		{0.3 , 0  , "Holy Light"},
-		{0.99, 0  , "Flash of Light"},
+		{0.9 , 0  , "Flash of Light"},
 		{0.9 , 0  , "Holy Light",2}
-	},
-	precastTest={
-		{0.9 , 35 ,"Holy Light(Rank 1)",2}
 	}
 }
 
@@ -117,6 +114,10 @@ class.EventHandler=function()
 		ryn.currentHealFinish=GetTime()+arg2/1000
 	elseif event=="SPELLCAST_DELAYED" then
 		ryn.currentHealFinish=ryn.currentHealFinish+arg1/1000
+	elseif event=="SPELLCAST_STOP" then
+		ryn.currentHealTarget=nil
+		ryn.currentHealFinish=nil
+		ryn.precastHpThreshold=nil
 	end
 end
 
@@ -124,6 +125,7 @@ class.eventFrame=CreateFrame("Frame")
 class.eventFrame:RegisterEvent("UI_ERROR_MESSAGE")
 class.eventFrame:RegisterEvent("SPELLCAST_START")
 class.eventFrame:RegisterEvent("SPELLCAST_DELAYED")
+class.eventFrame:RegisterEvent("SPELLCAST_STOP")
 class.eventFrame:SetScript("OnEvent",class.EventHandler)
 
 class.HealTarget=function(healProfile,target,hp)
@@ -133,7 +135,7 @@ class.HealTarget=function(healProfile,target,hp)
 			local mana=UnitMana("player")
 			ryn.currentHealFinish=nil
 			if mana>=manaCost and (not withCdOnly or ryn.BuffCheck("player",class.buffDivineFavor)) and ryn.GetSpellCooldownByName(spellName)==0 then
-				if (not healMode or healMode==1) and target and hp<hpThreshold and (not lTargetList or lTargetList[target]) then
+				if (not healMode or healMode==1) and target and hp<hpThreshold and (not lTargetList or ryn.targetList[lTargetList][target]) then
 					--ryn.Debug("Executing heal profile \""..healProfile.."\", entry: "..i)
 					ryn.targetList.all[target].blacklist=nil
 					ryn.currentHealTarget=target
@@ -142,15 +144,20 @@ class.HealTarget=function(healProfile,target,hp)
 					break
 				elseif healMode==2 then
 					if ryn.CheckRaidIcon("target",8) or ryn.CheckRaidIcon("target",7) or ryn.TryTargetRaidIcon(8,10,true) or ryn.TryTargetRaidIcon(7,10,true) then
-						if UnitExists("targettarget") and UnitIsFriend("player","targettarget") then
+						local precastTarget=ryn.GetGroupId("targettarget")
+						if precastTarget then
 							--ryn.Debug("Executing heal profile \""..healProfile.."\", entry: "..i)
-							ryn.currentHealTarget=ryn.GetGroupId("targettarget") or "targettarget"
-							ryn.precastHpThreshold=hpThreshold
 							CastSpellByName(spellName)
-							SpellTargetUnit(ryn.currentHealTarget)
+							if ryn.IsValidSpellTarget(precastTarget) then
+								ryn.currentHealTarget=precastTarget
+								ryn.precastHpThreshold=hpThreshold
+								SpellTargetUnit(ryn.currentHealTarget)
+								break
+							else
+								SpellStopTargeting()
+							end
 						end
 					end
-					break
 				end
 			end
 		end
@@ -182,7 +189,7 @@ ryn.Buff=function(lTargetList,defaultAura,buffProfile)
 		return
 	end
 	if buffProfile then
-		if buffProfile~="Custom" then
+		if buffProfile~="custom" then
 			if class.buffProfiles[buffProfile] then
 				local spell,buff,classExcl,roleExcl=unpack(class.buffProfiles[buffProfile])
 				for target,info in pairs(lTargetList) do
@@ -224,7 +231,7 @@ ryn.Heal=function(lTargetList,healProfile)
 		local target,hp=ryn.GetHealTarget(lTargetList,class.healRange)
 		class.HealTarget(healProfile,target,hp)
 	else
-		ryn.HealInterrupt(ryn.currentHealTarget,ryn.currentHealFinish,ryn.precastHpThreshold)
+		ryn.HealInterrupt()
 	end
 end
 
@@ -260,7 +267,7 @@ ryn.HealOrDispel=function(lTargetList,healProfile,dispelTypes,dispelByHp,dispelH
 			class.DispelTarget(target)
 		end
 	else
-		ryn.HealInterrupt(ryn.currentHealTarget,ryn.currentHealFinish,ryn.precastHpThreshold)
+		ryn.HealInterrupt()
 	end
 end
 

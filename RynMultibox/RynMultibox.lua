@@ -5,10 +5,11 @@ ryn.masterName="Harklen"
 ryn.dpsMode=1
 -- 1: Skull/cross targeting
 -- 2: Master assist targeting (with skull/cross target lock if applied)
-ryn.precastInterruptWindow=0.5
+ryn.precastInterruptWindow=1
 ryn.healHpThreshold=0.9
 ryn.healInterruptThreshold=0.95
 ryn.stopCastingDelay=0.5
+-- Delay a new spellcast after a spell is interrupted.
 ryn.blacklistTime=10
 ryn.retryBlacklist=true
 -- true: Try to heal/dispel blacklisted players, when no non-blacklisted player needs healing/dispelling.
@@ -70,7 +71,7 @@ ryn.IsCastingOrChanneling=function()
 end
 
 ryn.IsValidSpellTarget=function(target)
-	return not UnitIsDeadOrGhost(target) and SpellCanTargetUnit(target)
+	return not UnitIsDeadOrGhost(target) and SpellCanTargetUnit(target) and UnitIsFriend("player",target)
 end
 
 ryn.ClearFriendlyTarget=function()
@@ -182,21 +183,27 @@ ryn.GetHealOrDispelTarget=function(targetList,healSpell,healIcon,dispelSpell,dis
 	return dispelTarget,debuffType,nil,nil,action
 end
 
-ryn.HealInterrupt=function(target,finish,hpThreshold)
-	if not ryn.stopCastingDelayExpire then
+ryn.HealInterrupt=function()
+	local target=ryn.currentHealTarget
+	local finish=ryn.currentHealFinish
+	local t=GetTime()
+	if target and finish and (not ryn.stopCastingDelayExpire or ryn.stopCastingDelayExpire<t) then
 		if ryn.precastHpThreshold then -- Precast
-			if not UnitExists(target) or not UnitIsFriend("player",target) or
-			finish and finish-ryn.precastInterruptWindow<GetTime() and not ryn.HpLower(target,hpThreshold) then
+			--ryn.Debug("PRECAST")
+			if finish-ryn.precastInterruptWindow<t and not ryn.HpLower(target,ryn.precastHpThreshold) then
+				--ryn.Debug("PRECAST_INTERRUPT")
 				SpellStopCasting()
 				--ryn.Debug("Precast interrupt!")
-				ryn.stopCastingDelayExpire=GetTime()+ryn.stopCastingDelay
+				ryn.stopCastingDelayExpire=t+ryn.stopCastingDelay
+				ryn.precastHpThreshold=nil
 			end
-		elseif target and finish then -- Overheal prevention
-			if UnitExists(target) and not ryn.HpLower(target,ryn.healInterruptThreshold) and
-			(not ryn.targetList.tank[target] or finish-ryn.precastInterruptWindow<GetTime()) then
+		else -- Overheal prevention
+			--ryn.Debug("OVERHEAL")
+			if not ryn.HpLower(target,ryn.healInterruptThreshold) and (not ryn.targetList.tank[target] or finish-ryn.precastInterruptWindow<t) then
+				--ryn.Debug("OVERHEAL_INTERRUPT")
 				SpellStopCasting()
 				--ryn.Debug("Overheal interrupt!")
-				ryn.stopCastingDelayExpire=GetTime()+ryn.stopCastingDelay
+				ryn.stopCastingDelayExpire=t+ryn.stopCastingDelay
 			end
 		end
 	end
@@ -206,7 +213,7 @@ ryn.BlacklistTarget=function(target)
 	if target then
 		local targetInfo=ryn.targetList.all[target]
 		if targetInfo then
-			ryn.Debug("Blacklisted "..targetInfo.name.."! ("..ryn.blacklistTime.."s)")
+			--ryn.Debug("Blacklisted "..targetInfo.name.."! ("..ryn.blacklistTime.."s)")
 			--if not targetInfo.blacklist then
 			--	SendChatMessage("Blacklisted "..targetInfo.name.."! ("..ryn.blacklistTime.."s)","SAY")
 			--end
@@ -252,7 +259,6 @@ end
 ryn.SpellCastReady=function(spell,delay)
 	if not ryn.IsCastingOrChanelling() and ryn.GetSpellCooldownByName(spell)==0 and (not delay or delay<GetTime()) then
 		ryn.stopCastingDelayExpire=nil
-		ryn.precastHpThreshold=nil
 		return true
 	end
 	return false

@@ -46,5 +46,9 @@ ryn.GetSpellIdEntries=function(pSpellId)
 end
 
 ryn.GetSpellCooldownByName=function(spellName)
-	return GetSpellCooldown(spellData[spellName].spellId,spellData[spellName].bookType)
+	local spellEntry=spellData[spellName]
+	if spellEntry then
+		return GetSpellCooldown(spellEntry.spellId,spellEntry.bookType)
+	end
+	return nil
 end
