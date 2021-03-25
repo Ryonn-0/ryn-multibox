@@ -110,6 +110,8 @@ class.healProfiles={
 class.EventHandler=function()
 	if event=="UI_ERROR_MESSAGE" and arg1=="Target not in line of sight" then
 		ryn.BlacklistTarget(ryn.currentHealTarget)
+		ryn.currentHealTarget=nil
+		ryn.precastHpThreshold=nil
 	elseif event=="SPELLCAST_START" then
 		ryn.currentHealFinish=GetTime()+arg2/1000
 	elseif event=="SPELLCAST_DELAYED" then

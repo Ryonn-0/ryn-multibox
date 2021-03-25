@@ -15,16 +15,18 @@ class.aoeHealMinPlayers=3
 class.EventHandler=function()
 	if event=="UI_ERROR_MESSAGE" and arg1=="Target not in line of sight" then
 		ryn.BlacklistTarget(ryn.currentHealTarget)
+		ryn.currentHealTarget=nil
+		ryn.precastHpThreshold=nil
 	elseif event=="SPELLCAST_START" then
 		ryn.currentHealFinish=GetTime()+arg2/1000
-		ryn.Debug("START: "..GetTime())
+		--ryn.Debug("START: "..GetTime())
 	elseif event=="SPELLCAST_DELAYED" then
 		ryn.currentHealFinish=ryn.currentHealFinish+arg1/1000
 	elseif event=="SPELLCAST_STOP" then
 		ryn.currentHealTarget=nil
 		ryn.currentHealFinish=nil
 		ryn.precastHpThreshold=nil
-		ryn.Debug("STOP: "..GetTime())
+		--ryn.Debug("STOP: "..GetTime())
 	end
 end
 

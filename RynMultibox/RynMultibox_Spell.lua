@@ -45,6 +45,13 @@ ryn.GetSpellIdEntries=function(pSpellId)
 	end
 end
 
+ryn.SpellExists=function(spellName)
+	if spellData[spellName] then
+		return true
+	end
+	return false
+end
+
 ryn.GetSpellCooldownByName=function(spellName)
 	local spellEntry=spellData[spellName]
 	if spellEntry then

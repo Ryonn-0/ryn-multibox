@@ -6,20 +6,33 @@ class={}
 class.buffDemon="Interface\\Icons\\Spell_Shadow_RagingScream"
 class.buffFire="Interface\\Icons\\Spell_Fire_FireArmor"
 --class.buffSoulstone="Interface\\Icons\\Spell_Shadow_SoulGem"
+class.curses={
+	doom={spell="Curse of Doom",debuff="Interface\\Icons\\Spell_Shadow_AuraOfDarkness",mana=300},
+	recklessness={spell="Curse of Recklessness",debuff="Interface\\Icons\\Spell_Shadow_UnholyStrength",mana=115},
+	shadow={spell="Curse of Shadow",debuff="Interface\\Icons\\Spell_Shadow_CurseOfAchimonde",mana=200},
+	tongues={spell="Curse of Tongues",debuff="Interface\\Icons\\Spell_Shadow_CurseOfTounges",mana=110},
+	weakness={spell="Curse of Weakness",debuff="Interface\\Icons\\Spell_Shadow_CurseOfMannoroth",mana=175,amplify=true},
+	elements={spell="Curse of the Elements",debuff="Interface\\Icons\\Spell_Shadow_ChillTouch",mana=200},
+	agony={spell="Curse of Agony",debuff="Interface\\Icons\\Spell_Shadow_CurseOfSargeras",mana=215,amplify=true},
+	exhaustion={spell="Curse of Exhaustion",debuff="Interface\\Icons\\Spell_Shadow_GrimWard",mana=109,amplify=true}
+}
+
+class.tapThreshold=0.4
 
 ryn.Buff=function(lTargetList)
 	lTargetList=lTargetList or ryn.targetList.all
-	-- Returns are intentionally left out after warlock buff/summon, because the warlock and the minion can cast a spell simultaneously with a single function call.
 	if not HasPetUI() then
 		if UnitMana("player")>=1098 then
 			CastSpellByName("Summon Imp")
-		elseif not ryn.HpLower("player",0.4) then
+			return
+		elseif not ryn.HpLower("player",class.tapThreshold) then
 			CastSpellByName("Life Tap")
+			return
 		end
 	elseif not ryn.BuffCheck("player",class.buffDemon) then
 		if UnitMana("player")>=1580 then
 			CastSpellByName("Demon Armor")
-		elseif not ryn.HpLower("player",0.4) then
+		elseif not ryn.HpLower("player",class.tapThreshold) then
 			CastSpellByName("Life Tap")
 		end
 	end
@@ -38,17 +51,30 @@ ryn.CC=function()
 			CastSpellByName("Banish")
 		elseif mana>=205 then
 			CastSpellByName("Fear")
-		elseif not ryn.HpLower("player",0.4) then
+		elseif not ryn.HpLower("player",class.tapThreshold) then
 			CastSpellByName("Life Tap")
 		end
 	end
 end
 
-ryn.Dps=function()
+ryn.Dps=function(curse,drainThreshold)
 	if not ryn.IsCastingOrChanelling() and ryn.GetHostileTarget() then
 		local mana,noMana=UnitMana("player"),false
+		if curse then
+			curse=class.curses[curse]
+		end
 		if ryn.damageType.shadow then
-			if mana>=372 then
+			if drainThreshold and mana>=290 and ryn.HpLower("target",drainThreshold) then
+				CastSpellByName("Drain Soul")
+				return
+			elseif curse and ryn.SpellExists(curse.spell) and mana>=curse.mana and not ryn.DebuffCheck("target",curse.debuff) then
+				if curse.amplify and ryn.GetSpellCooldownByName("Amplify Curse")==0 then
+					CastSpellByName("Amplify Curse")
+					return
+				end
+				CastSpellByName(curse.spell)
+				return
+			elseif mana>=372 then
 				CastSpellByName("Shadow Bolt")
 				return
 			else
@@ -62,25 +88,11 @@ ryn.Dps=function()
 				noMana=true
 			end
 		end
-		if noMana and not ryn.HpLower("player",0.4) then
+		if noMana and not ryn.HpLower("player",class.tapThreshold) then
 			CastSpellByName("Life Tap")
 		end
 	end
-	-- TODO: Apply curse, use wand if Life Tap can not be cast or below a hp threshold.
-end
-
-ryn.DrainSoul=function()
-	if not ryn.IsCastingOrChanelling() and ryn.GetHostileTarget() then
-		if ryn.HpLower("target",0.3) then
-			if UnitMana("player")>=290 then
-				CastSpellByName("Drain Soul")
-			elseif not ryn.HpLower("player",0.4) then
-				CastSpellByName("Life Tap")
-			end
-		else
-			ryn.Dps()
-		end
-	end
+	-- TODO: Use wand if Life Tap can not be cast or below a hp threshold.
 end
 
 ryn.DrainMana=function()
