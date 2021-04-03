@@ -24,7 +24,7 @@ class.multiShotExpire=0
 class.arrowCount=GetInventoryItemCount("player",0)
 class.ignoreNext=false
 
-class.EventHandler=function()
+ryn.ClassEventHandler=function()
 	local newArrowCount=GetInventoryItemCount("player",0)
 	if class.arrowCount~=newArrowCount then
 		class.arrowCount=newArrowCount
@@ -37,9 +37,9 @@ class.EventHandler=function()
 	end
 end
 
-class.eventFrame=CreateFrame("Frame")
-class.eventFrame:RegisterEvent("BAG_UPDATE")
-class.eventFrame:SetScript("OnEvent",class.EventHandler)
+ryn.classEventFrame=CreateFrame("Frame")
+ryn.classEventFrame:RegisterEvent("BAG_UPDATE")
+ryn.classEventFrame:SetScript("OnEvent",ryn.ClassEventHandler)
 
 ryn.Buff=function()
 	if not ryn.BuffCheck("player",class.buffHawk) then

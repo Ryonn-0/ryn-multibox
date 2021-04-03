@@ -107,7 +107,7 @@ class.healProfiles={
 	}
 }
 
-class.EventHandler=function()
+ryn.ClassEventHandler=function()
 	if event=="UI_ERROR_MESSAGE" and arg1=="Target not in line of sight" then
 		ryn.BlacklistTarget(ryn.currentHealTarget)
 		ryn.currentHealTarget=nil
@@ -123,12 +123,12 @@ class.EventHandler=function()
 	end
 end
 
-class.eventFrame=CreateFrame("Frame")
-class.eventFrame:RegisterEvent("UI_ERROR_MESSAGE")
-class.eventFrame:RegisterEvent("SPELLCAST_START")
-class.eventFrame:RegisterEvent("SPELLCAST_DELAYED")
-class.eventFrame:RegisterEvent("SPELLCAST_STOP")
-class.eventFrame:SetScript("OnEvent",class.EventHandler)
+ryn.classEventFrame=CreateFrame("Frame")
+ryn.classEventFrame:RegisterEvent("UI_ERROR_MESSAGE")
+ryn.classEventFrame:RegisterEvent("SPELLCAST_START")
+ryn.classEventFrame:RegisterEvent("SPELLCAST_DELAYED")
+ryn.classEventFrame:RegisterEvent("SPELLCAST_STOP")
+ryn.classEventFrame:SetScript("OnEvent",ryn.ClassEventHandler)
 
 class.HealTarget=function(healProfile,target,hp)
 	if class.healProfiles[healProfile] then

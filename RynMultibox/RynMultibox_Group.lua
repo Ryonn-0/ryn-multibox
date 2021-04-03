@@ -1,8 +1,8 @@
 -- Group management
 
 local nameList={
-	tank={"Harklen","Gaelber","Llanewrynn","Stardancer","Cooperbeard","Naderius","Dobzse","Obier","Yxon","Amonstenn","Fierileya","Peacebringer","Bendegúz"},
-	heal={"Alaniel","Flo","Livia","Hoyt","Myra","Papsajt","Negreanu","Kearlah","Azure","Warrógép","Rhodelya"},
+	tank={"Harklen","Gaelber","Llanewrynn","Stardancer","Cooperbeard","Dobzse","Obier","Yxon","Amonstenn","Fierileya","Peacebringer","Bendegúz"},
+	heal={"Alaniel","Flo","Livia","Hoyt","Myra","Papsajt","Negreanu","Kearlah","Azure","Warrógép","Rhodelya","Blueyes"},
 	multiHeal={
 	"Paladino","Dreamblast","Skyx","Uyalin","Illumyn", -- Kearlah
 	"Baleog","Lionel","Nobleforged","Lightbeard","Moonflower","Bronzecoat", -- Azsgrof

@@ -12,3 +12,5 @@ Class\RynMultibox_Paladin.lua
 Class\RynMultibox_Priest.lua
 Class\RynMultibox_Warlock.lua
 Class\RynMultibox_Warrior.lua
+RynMultibox_Override.lua
+Override\RynMultibox_Nefarian.lua

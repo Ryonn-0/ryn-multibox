@@ -14,15 +14,15 @@ class.buffAbolishPoison="Interface\\Icons\\Spell_Nature_NullifyPoison_02"
 
 class.druidDispelRange="Thorns"
 
-class.EventHandler=function()
+ryn.ClassEventHandler=function()
 	if event=="UI_ERROR_MESSAGE" and arg1=="Target not in line of sight" then
 		ryn.BlacklistTarget(ryn.currentHealTarget)
 	end
 end
 
-class.eventFrame=CreateFrame("Frame")
-class.eventFrame:RegisterEvent("UI_ERROR_MESSAGE")
-class.eventFrame:SetScript("OnEvent",class.EventHandler)
+ryn.classEventFrame=CreateFrame("Frame")
+ryn.classEventFrame:RegisterEvent("UI_ERROR_MESSAGE")
+ryn.classEventFrame:SetScript("OnEvent",ryn.ClassEventHandler)
 
 --class.GetForm=function()
 --	for i=1,5 do
