@@ -326,6 +326,27 @@ ryn.SSCheck=function(lTargetList)
 	end
 end
 
+ryn.EquipItemByItemLink=function(itemLink,invSlotId)
+	for bag=0,4 do
+		for slot=1,GetContainerNumSlots(bag) do
+			local item=GetContainerItemLink(bag,slot)
+			if item==itemLink then
+				PickupContainerItem(bag,slot)
+				EquipCursorItem(invSlotId)
+			end
+		end
+	end
+end
+
+ryn.UnequipItemBySlotId=function(invSlotId)
+	local itemLink=GetInventoryItemLink("player",invSlotId)
+	if itemLink then
+		PickupInventoryItem(invSlotId)
+		PutItemInBackpack()
+		return itemLink
+	end
+end
+
 ryn.addOns={"Bartender2","Cartographer","!ImprovedErrorFrame","MobInfo2","!OmniCC","XPerl","XPerl_Options","XPerl_Party","XPerl_PartyPet","XPerl_Player","XPerl_PlayerPet"
 	,"XPerl_RaidAdmin","XPerl_RaidFrames","XPerl_RaidHelper","XPerl_Target","XPerl_TargetTarget","XLoot","ShaguDB","ShaguQuest","!Questie"
 }
