@@ -10,7 +10,7 @@ ryn.RevertOverride=function()
 		ryn[name]=func
 		if name=="ClassEventHandler" then -- Tempfix for event overrides, refactor event system later.
 			ryn.classEventFrame:SetScript("OnEvent",ryn.ClassEventHandler)
-			if ryn.overrideLocal[mode].overrideEvents then
+			if ryn.overrideLocal[ryn.overrideMode].overrideEvents then
 				for _,event in ipairs(ryn.overrideLocal[ryn.overrideMode].overrideEvents) do
 					ryn.classEventFrame:UnregisterEvent(event)
 				end

@@ -78,7 +78,7 @@ elseif ryn.playerClass=="HUNTER" then
 		ryn.default.ClassEventHandler()
 		if event=="CHAT_MSG_MONSTER_YELL" then
 			if string.find(arg1,nef.engagePrefix,1,1) then
-				nef.nextCall=GetTime()+40 -- Not sure about this value
+				nef.nextCall=GetTime()+35 -- Not sure about this value
 			else
 				local called=false
 				for _,callPrefix in nef.classCallPrefixes do
