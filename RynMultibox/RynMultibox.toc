@@ -14,3 +14,4 @@ Class\RynMultibox_Warlock.lua
 Class\RynMultibox_Warrior.lua
 RynMultibox_Override.lua
 Override\RynMultibox_Nefarian.lua
+UI\RynMultibox_Main.lua
