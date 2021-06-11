@@ -15,7 +15,7 @@ ryn.retryBlacklist=true
 -- true: Try to heal/dispel blacklisted players, when no non-blacklisted player needs healing/dispelling.
 -- false: Blacklisted players won't get heals/dispels until blacklist time expires.
 ryn.aoeEnabled=true
-ryn.damageType={arcane=true,fire=true,frost=true,holy=true,melee=true,nature=true,ranged=true,shadow=true}
+ryn.damageType={arcane=true,fire=true,frost=true,holy=true,melee=true,nature=true,ranged=true,shadow=true,tank=true}
 
 -- Addon global variables
 _,ryn.playerClass=UnitClass("player")
@@ -25,12 +25,26 @@ ryn.buffSoulstone="Interface\\Icons\\Spell_Shadow_SoulGem"
 --ryn.currentHealFinish
 --ryn.precastHpThreshold
 
-ryn.Debug=function(message)
+ryn.Debug=function(message,carry)
+	local t,s=type(message),""
 	if message==nil then
-		DEFAULT_CHAT_FRAME:AddMessage("nil")
+		s=s.."nil"
+	elseif t=="boolean" then
+		if message then s=s.."true" else s=s.."false" end
+	elseif t=="string" or t=="number" then
+		s=s..message
+	elseif t=="table" and not carry then
+		for key,val in message do
+			s=s..ryn.Debug(key,true).." -> "..ryn.Debug(val,true)
+			DEFAULT_CHAT_FRAME:AddMessage(s)
+			s=""
+		end
+		return
 	else
-		DEFAULT_CHAT_FRAME:AddMessage(message)
+		s=s..t
 	end
+	if carry then return s
+	else DEFAULT_CHAT_FRAME:AddMessage(s) end
 end
 
 ryn.GetSpellSlot=function(texture)
@@ -222,6 +236,20 @@ ryn.BlacklistTarget=function(target)
 	end
 end
 
+ryn.IsBlacklisted=function(target)
+	if target then
+		targetInfo=ryn.targetList.all[target]
+		if targetInfo then
+			if not targetInfo.blacklist or targetInfo.blacklist<=GetTime() then
+				targetInfo.blacklist=nil
+				return false
+			else
+				return true
+			end
+		end
+	end
+end
+
 ryn.IsActionReady=function(actionSlot)
 	return IsUsableAction(actionSlot) and GetActionCooldown(actionSlot)==0
 end
@@ -296,7 +324,7 @@ ryn.GetHostileTarget=function()
 	elseif ryn.dpsMode==2 then
 		if ryn.masterTarget then
 			AssistUnit(ryn.masterTarget)
-			if UnitExists("target") and UnitCanAttack("player","target") then
+			if UnitExists("target") and not UnitIsDead("target") and UnitCanAttack("player","target") then
 				return true
 			end
 		end

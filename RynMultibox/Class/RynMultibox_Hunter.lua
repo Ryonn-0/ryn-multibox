@@ -1,38 +1,50 @@
-local class
-
 if ryn.playerClass=="HUNTER" then
-class={}
 
-class.buffHawk="Interface\\Icons\\Spell_Nature_RavenForm"
-class.buffTrueshot="Interface\\Icons\\Ability_TrueShot"
-class.debuffMark="Interface\\Icons\\Ability_Hunter_SniperShot"
+ryn.buffHawk="Interface\\Icons\\Spell_Nature_RavenForm"
+ryn.buffTrueshot="Interface\\Icons\\Ability_TrueShot"
+ryn.debuffMark="Interface\\Icons\\Ability_Hunter_SniperShot"
 
 -- Settings
-class.aimedShotWindow=1 -- low value, with 3.0+ ranged attack speed (full/auto shot rotation), or a higher value with 2.9- ranged attack speed (clipped/aimed shot rotation)
-class.multiShotWindow=1.6 -- should be around ranged attack speed minus 1
+ryn.aimedShotWindow=1 -- low value, with 3.0+ ranged attack speed (full/auto shot rotation), or a higher value with 2.9- ranged attack speed (clipped/aimed shot rotation)
+ryn.multiShotWindow=1.6 -- should be around ranged attack speed minus 1
 
 -- Action bar slot ids
-class.aimedShotActionSlot=1
-class.autoShotActionSlot=2
-class.multiShotActionSlot=4
-class.autoAttackActionSlot=60
-class.raptorStrikeActionSlot=61
-class.mongooseBiteActionSlot=62
+--ryn.aimedShotActionSlot=1
+--ryn.autoShotActionSlot=2
+--ryn.multiShotActionSlot=4
+--ryn.autoAttackActionSlot=60
+--ryn.raptorStrikeActionSlot=61
+--ryn.mongooseBiteActionSlot=62
 
-class.aimedShotExpire=0
-class.multiShotExpire=0
-class.arrowCount=GetInventoryItemCount("player",0)
-class.ignoreNext=false
+ryn.ClassActionSlotInit=function()
+	ryn.aimedShotActionSlot=ryn.GetActionSlot("Aimed Shot")
+	--ryn.Debug(ryn.aimedShotActionSlot)
+	ryn.autoShotActionSlot=ryn.GetActionSlot("Auto Shot")
+	--ryn.Debug(ryn.autoShotActionSlot)
+	ryn.multiShotActionSlot=ryn.GetActionSlot("Multi-Shot")
+	--ryn.Debug(ryn.multiShotActionSlot)
+	ryn.autoAttackActionSlot=ryn.GetActionSlot("Attack")
+	--ryn.Debug(ryn.autoAttackActionSlot)
+	ryn.raptorStrikeActionSlot=ryn.GetActionSlot("Raptor Strike")
+	--ryn.Debug(ryn.raptorStrikeActionSlot)
+	ryn.mongooseBiteActionSlot=ryn.GetActionSlot("Mongoose Bite")
+	--ryn.Debug(ryn.mongooseBiteActionSlot)
+end
+
+ryn.aimedShotExpire=0
+ryn.multiShotExpire=0
+ryn.arrowCount=GetInventoryItemCount("player",0)
+ryn.ignoreNext=false
 
 ryn.ClassEventHandler=function()
 	local newArrowCount=GetInventoryItemCount("player",0)
-	if class.arrowCount~=newArrowCount then
-		class.arrowCount=newArrowCount
-		if class.ignoreNext then
-			class.ignoreNext=false
+	if ryn.arrowCount~=newArrowCount then
+		ryn.arrowCount=newArrowCount
+		if ryn.ignoreNext then
+			ryn.ignoreNext=false
 		else
-			class.aimedShotExpire=GetTime()+class.aimedShotWindow
-			class.multiShotExpire=GetTime()+class.multiShotWindow
+			ryn.aimedShotExpire=GetTime()+ryn.aimedShotWindow
+			ryn.multiShotExpire=GetTime()+ryn.multiShotWindow
 		end
 	end
 end
@@ -42,47 +54,49 @@ ryn.classEventFrame:RegisterEvent("BAG_UPDATE")
 ryn.classEventFrame:SetScript("OnEvent",ryn.ClassEventHandler)
 
 ryn.Buff=function()
-	if not ryn.BuffCheck("player",class.buffHawk) then
+	if not ryn.BuffCheck("player",ryn.buffHawk) then
 		CastSpellByName("Aspect of the Hawk")
-	elseif not ryn.BuffCheck("player",class.buffTrueshot) then
+	elseif not ryn.BuffCheck("player",ryn.buffTrueshot) then
 		CastSpellByName("Trueshot Aura")
 	end
 	--TODO: Add hunter's mark
 end
 
-class.RangedDps=function()
-	if not IsAutoRepeatAction(class.autoShotActionSlot) then
+ryn.RangedDps=function()
+	if not IsAutoRepeatAction(ryn.autoShotActionSlot) then
 		CastSpellByName("Auto Shot")
-		class.ignoreNext=false
+		ryn.ignoreNext=false
 		return
 	end
-	if not IsCurrentAction(class.aimedShotActionSlot) and not IsCurrentAction(class.multiShotActionSlot) then
-		if class.aimedShotExpire>=GetTime() and ryn.IsActionReady(class.aimedShotActionSlot) then
+	if not IsCurrentAction(ryn.aimedShotActionSlot) and not IsCurrentAction(ryn.multiShotActionSlot) then
+		if ryn.aimedShotExpire>=GetTime() and ryn.IsActionReady(ryn.aimedShotActionSlot) then
 			CastSpellByName("Aimed Shot")
-			class.ignoreNext=true
-		elseif ryn.aoeEnabled and class.multiShotExpire>=GetTime() and ryn.IsActionReady(class.multiShotActionSlot) then
+			ryn.ignoreNext=true
+		elseif ryn.aoeEnabled and ryn.multiShotExpire>=GetTime() and ryn.IsActionReady(ryn.multiShotActionSlot) then
 			CastSpellByName("Multi-Shot")
-			class.ignoreNext=true
+			ryn.ignoreNext=true
 		end
 	end
 end
 
-class.MeleeDps=function()
-	if ryn.IsActionReady(class.mongooseBiteActionSlot) then
+ryn.MeleeDps=function()
+	if ryn.IsActionReady(ryn.mongooseBiteActionSlot) then
 		CastSpellByName("Mongoose Bite")
-	elseif not IsCurrentAction(class.raptorStrikeActionSlot) and ryn.IsActionReady(class.raptorStrikeActionSlot) then
+	elseif not IsCurrentAction(ryn.raptorStrikeActionSlot) and ryn.IsActionReady(ryn.raptorStrikeActionSlot) then
 		CastSpellByName("Raptor Strike")
-	elseif not IsCurrentAction(class.autoAttackActionSlot) then
+	elseif not IsCurrentAction(ryn.autoAttackActionSlot) then
 		CastSpellByName("Attack")
 	end
 end
 
 ryn.Dps=function()
 	if ryn.GetHostileTarget() then
-		if ryn.damageType.ranged and IsActionInRange(class.autoShotActionSlot)==1 then
-			class.RangedDps()
-		elseif ryn.damageType.melee and IsActionInRange(class.mongooseBiteActionSlot)==1 then
-			class.MeleeDps()
+		if ryn.damageType.arcane and not ryn.DebuffCheck("target",ryn.debuffMark) then
+			CastSpellByName("Hunter's Mark")
+		elseif ryn.damageType.ranged and IsActionInRange(ryn.autoShotActionSlot)==1 then
+			ryn.RangedDps()
+		elseif ryn.damageType.melee and IsActionInRange(ryn.mongooseBiteActionSlot)==1 then
+			ryn.MeleeDps()
 		end
 	end
 	-- TODO: pet stuff here

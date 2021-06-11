@@ -1,10 +1,10 @@
 -- Group management
 
 local nameList={
-	tank={"Harklen","Gaelber","Llanewrynn","Stardancer","Cooperbeard","Dobzse","Obier","Yxon","Amonstenn","Fierileya","Peacebringer","Bendegúz"},
+	tank={"Harklen","Gaelber","Llanewrynn","Stardancer","Cooperbeard","Dobzse","Obier","Yxon","Amonstenn","Fierileya","Peacebringer","Bendegúz","Pinky","Paladino"},
 	heal={"Alaniel","Flo","Livia","Hoyt","Myra","Papsajt","Negreanu","Kearlah","Azure","Warrógép","Rhodelya","Blueyes"},
 	multiHeal={
-	"Paladino","Dreamblast","Skyx","Uyalin","Illumyn", -- Kearlah
+	"Dreamblast","Skyx","Uyalin","Illumyn", -- Kearlah   (paladino temp tank)
 	"Baleog","Lionel","Nobleforged","Lightbeard","Moonflower","Bronzecoat", -- Azsgrof
 	"Pamelma" -- Dobzse
 	},
@@ -18,13 +18,13 @@ local nameList={
 }
 
 local function InitTargetList()
-	ryn.targetList={all={},group={},party={},master={},self={}}
+	ryn.targetList={all={},party={},master={},self={}}
 	for role,names in pairs(nameList) do
 		ryn.targetList[role]={}
 	end
 	ryn.targetList.dps={}
 	for i=1,8 do
-		ryn.targetList.group[i]={}
+		ryn.targetList["group"..i]={}
 	end
 end
 InitTargetList()
@@ -33,8 +33,8 @@ local targetListReady=false
 -- targetLists: {all,tank,heal,dps(default),multiHeal,multiDps,myMultiHeal,myMultiDps,party,group<1-8>,<charname>,master,self}   TODO: assist?,class,custom<any>?
 -- playerInfo: uid -> {name,role,class,group,bias}
 
--- Initialize bias list structure
-local biasList={group={}}
+-- Initialize bias list
+local biasList={}
 
 -- Set default global bias values
 biasList.tank,biasList.heal,biasList.multiHeal,biasList.multiDps,biasList.myMultiHeal,biasList.myMultiDps=-0.1,-0.07,0.1,0.15,-0.05,-0.02
@@ -47,7 +47,8 @@ biasList.self=-0.05
 --biasList.tank,biasList.heal,biasList.dps,biasList.multiHeal,biasList.multiDps,biasList.myMultiHeal,biasList.myMultiDps=0.1,0.2,0.3,0.4,0.5,0.6,0.7
 --biasList.self=0.01
 --biasList.master=0.001
---biasList.group={1,2,3,4,5,6,7,8}
+--biasList.group1,biasList.group2,biasList.group3,biasList.group4=1,2,3,4
+--biasList.group5,biasList.group6,biasList.group7,biasList.group8=5,6,7,8
 --biasList.party=10
 --biasList.Alaniel=100
 
@@ -65,29 +66,17 @@ end
 
 -- This function should be used in SuperMacro's extended LUA code fields, to easily manage healing biases per healer.
 -- I could set biasList as a saved variable, might do it later, but since the addon doesn't have ui elements, the method above is more comfortable to use.
-ryn.SetBias=function(bias,list,groupNum)
+ryn.SetBias=function(bias,list)
 	local oldBias
-	if list=="group" then
-		oldBias=biasList.group[groupNum]
-		biasList.group[groupNum]=bias
-	else
-		oldBias=biasList[list]
-		biasList[list]=bias
-	end
+	oldBias=biasList[list]
+	biasList[list]=bias
 	if oldBias==bias then
 		return
 	end
 	if ryn.targetList then
-		if list=="group" then
-			for target,info in pairs(ryn.targetList.group[groupNum]) do
-				RemoveBias(info,oldBias)
-				AddBias(info,bias)
-			end
-		else
-			for target,info in pairs(ryn.targetList[list]) do
-				RemoveBias(info,oldBias)
-				AddBias(info,bias)
-			end
+		for target,info in pairs(ryn.targetList[list]) do
+			RemoveBias(info,oldBias)
+			AddBias(info,bias)
 		end
 	end
 	--ryn.Debug("New bias value set.")
@@ -148,10 +137,10 @@ local function RegisterUnit(isRaid,raidOrUnitId)
 		
 		-- Group
 		if isRaid then
-			ryn.targetList.group[unitGroup][uid]=targetInfo
-			AddBias(targetInfo,biasList.group[unitGroup])
+			ryn.targetList["group"..unitGroup][uid]=targetInfo
+			AddBias(targetInfo,biasList["group"..unitGroup])
 			if isPlayer then
-				ryn.targetList.party=ryn.targetList.group[unitGroup]
+				ryn.targetList.party=ryn.targetList["group"..unitGroup]
 				for target,partyInfo in pairs(ryn.targetList.party) do
 					AddBias(partyInfo,biasList.party)
 				end
@@ -187,6 +176,12 @@ local function GroupManagementHandler()
 		ryn.BuildTargetList()
 	elseif event=="PLAYER_ENTERING_WORLD" or event=="RAID_ROSTER_UPDATE" and UnitInRaid("player") or event=="PARTY_MEMBERS_CHANGED" and not UnitInRaid("player") then
 		ryn.UpdateTargetList()
+	elseif event=="ACTIONBAR_SLOT_CHANGED" then
+		if arg1 then
+			ryn.ActionSlotUpdate(arg1)
+			ryn.Debug("Action bar event: Slot"..arg1)
+		end
+		-- TODO: This shouldn't be here...
 	end
 end
 
@@ -194,6 +189,7 @@ local gmFrame=CreateFrame("Frame")
 gmFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 gmFrame:RegisterEvent("PARTY_MEMBERS_CHANGED")
 gmFrame:RegisterEvent("RAID_ROSTER_UPDATE")
+gmFrame:RegisterEvent("ACTIONBAR_SLOT_CHANGED")
 gmFrame:SetScript("OnEvent",GroupManagementHandler)
 
 ryn.BuildTargetList=function()
@@ -297,13 +293,13 @@ local function UpdateGroup(uid,info,groupNum)
 		end
 		
 		info.group=groupNum
-		ryn.targetList.group[groupNum][uid]=info
-		ryn.targetList.group[oldGroupNum][uid]=nil
-		AddBias(info,biasList.group[groupNum])
-		RemoveBias(info,biasList.group[oldGroupNum])
+		ryn.targetList["group"..groupNum][uid]=info
+		ryn.targetList["group"..oldGroupNum][uid]=nil
+		AddBias(info,biasList["group"..groupNum])
+		RemoveBias(info,biasList["group"..oldGroupNum])
 		
 		if ownName==info.name then
-			ryn.targetList.party=ryn.targetList.group[groupNum]
+			ryn.targetList.party=ryn.targetList["group"..groupNum]
 			for target,partyInfo in pairs(ryn.targetList.party) do
 				AddBias(partyInfo,biasList.party)
 			end
@@ -325,7 +321,7 @@ local function RemoveUid(uid)
 	if group==0 then
 		ryn.targetList.party[uid]=nil
 	else
-		ryn.targetList.group[group][uid]=nil
+		ryn.targetList["group"..group][uid]=nil
 	end
 	ryn.targetList[role][uid]=nil
 	if name==ryn.masterName then
@@ -423,18 +419,9 @@ end
 
 ryn.PrintTargetLists=function()
 	for listName,list in pairs(ryn.targetList) do
-		if listName=="group" then
-			for i=1,8 do
-				DEFAULT_CHAT_FRAME:AddMessage("Target list [group["..i.."]]:")
-				for uid,info in pairs(list[i]) do
-					DEFAULT_CHAT_FRAME:AddMessage(uid.." | "..info.name.." | "..info.role.." | "..info.class.." | group"..info.group.." | "..info.bias)
-				end
-			end
-		else
-			DEFAULT_CHAT_FRAME:AddMessage("Target list ["..listName.."]:")
-			for uid,info in pairs(list) do
-				DEFAULT_CHAT_FRAME:AddMessage(uid.." | "..info.name.." | "..info.role.." | "..info.class.." | group"..info.group.." | "..info.bias)
-			end
+		DEFAULT_CHAT_FRAME:AddMessage("Target list ["..listName.."]:")
+		for uid,info in pairs(list) do
+			DEFAULT_CHAT_FRAME:AddMessage(uid.." | "..info.name.." | "..info.role.." | "..info.class.." | group"..info.group.." | "..info.bias)
 		end
 	end
 end

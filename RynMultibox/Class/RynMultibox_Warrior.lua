@@ -1,27 +1,38 @@
-local class
-
 if ryn.playerClass=="WARRIOR" then
-class={}
 
-class.autoAttackActionSlot=81
-class.heroicStrikeActionSlot=85
-class.shieldSlamActionSlot=86
-class.revengeActionSlot=87
-class.sunderArmorActionSlot=88
-class.rageBuffer=0
+--ryn.autoAttackActionSlot=81
+--ryn.heroicStrikeActionSlot=85
+--ryn.shieldSlamActionSlot=86
+--ryn.revengeActionSlot=87
+--ryn.sunderArmorActionSlot=88
+
+ryn.ClassActionSlotInit=function()
+	ryn.autoAttackActionSlot=ryn.GetActionSlot("Attack")
+	--ryn.Debug(ryn.autoAttackActionSlot)
+	ryn.heroicStrikeActionSlot=ryn.GetActionSlot("Heroic Strike")
+	--ryn.Debug(ryn.heroicStrikeActionSlot)
+	ryn.shieldSlamActionSlot=ryn.GetActionSlot("Shield Slam")
+	--ryn.Debug(ryn.shieldSlamActionSlot)
+	ryn.revengeActionSlot=ryn.GetActionSlot("Revenge")
+	--ryn.Debug(ryn.revengeActionSlot)
+	ryn.sunderArmorActionSlot=ryn.GetActionSlot("Sunder Armor")
+	--ryn.Debug(ryn.sunderArmorActionSlot)
+end
+
+ryn.rageBuffer=0
 
 ryn.TankDps=function()
-	if ryn.damageType.melee then
+	if ryn.damageType.tank then
 		local rage=UnitMana("player")
-		if rage>=35+class.rageBuffer and not IsCurrentAction(class.heroicStrikeActionSlot) then
+		if rage>=50+ryn.rageBuffer and not IsCurrentAction(ryn.heroicStrikeActionSlot) then
 			CastSpellByName("Heroic Strike")
-		elseif rage>=5+class.rageBuffer and ryn.IsActionReady(class.revengeActionSlot) then
-			CastSpellByName("Revenge")
-		elseif rage>=20+class.rageBuffer and ryn.IsActionReady(class.shieldSlamActionSlot) then
+		elseif rage>=20+ryn.rageBuffer and ryn.IsActionReady(ryn.shieldSlamActionSlot) then
 			CastSpellByName("Shield Slam")
-		elseif rage>=12+class.rageBuffer and ryn.IsActionReady(class.sunderArmorActionSlot) then
+		elseif rage>=5+ryn.rageBuffer and ryn.IsActionReady(ryn.revengeActionSlot) then
+			CastSpellByName("Revenge")
+		elseif rage>=12+ryn.rageBuffer and ryn.IsActionReady(ryn.sunderArmorActionSlot) then
 			CastSpellByName("Sunder Armor")
-		elseif not IsCurrentAction(class.autoAttackActionSlot) then
+		elseif not IsCurrentAction(ryn.autoAttackActionSlot) then
 			CastSpellByName("Attack")
 		end
 	end

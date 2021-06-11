@@ -1,49 +1,46 @@
-local class
-
 if ryn.playerClass=="PALADIN" then
-class={}
 
-class.buffMight="Interface\\Icons\\Spell_Holy_FistOfJustice"
-class.buffWisdom="Interface\\Icons\\Spell_Holy_SealOfWisdom"
-class.buffLight="Interface\\Icons\\Spell_Holy_PrayerOfHealing02"
-class.buffSalvation="Interface\\Icons\\Spell_Holy_SealOfSalvation"
-class.buffKings="Interface\\Icons\\Spell_Magic_MageArmor"
-class.buffGreaterMight="Interface\\Icons\\Spell_Holy_GreaterBlessingofKings"
-class.buffGreaterWisdom="Interface\\Icons\\Spell_Holy_GreaterBlessingofWisdom"
-class.buffGreaterLight="Interface\\Icons\\Spell_Holy_GreaterBlessingofLight"
-class.buffGreaterSalvation="Interface\\Icons\\Spell_Holy_GreaterBlessingofSalvation"
-class.buffGreaterKings="Interface\\Icons\\Spell_Magic_GreaterBlessingofKings"
-class.buffDivineFavor="Interface\\Icons\\Spell_Holy_Heal"
---class.buffDevotionAura="Interface\\Icons\\Spell_Holy_DevotionAura"
---class.buffRetributionAura="Interface\\Icons\\Spell_Holy_AuraOfLight"
---class.buffConcentrationAura="Interface\\Icons\\Spell_Holy_MindSooth"
---class.buffShadowAura="Interface\\Icons\\Spell_Shadow_SealOfKings"
---class.buffFrostAura="Interface\\Icons\\Spell_Frost_WizardMark"
---class.buffFireAura="Interface\\Icons\\Spell_Fire_SealOfFire"
+ryn.buffMight="Interface\\Icons\\Spell_Holy_FistOfJustice"
+ryn.buffWisdom="Interface\\Icons\\Spell_Holy_SealOfWisdom"
+ryn.buffLight="Interface\\Icons\\Spell_Holy_PrayerOfHealing02"
+ryn.buffSalvation="Interface\\Icons\\Spell_Holy_SealOfSalvation"
+ryn.buffKings="Interface\\Icons\\Spell_Magic_MageArmor"
+ryn.buffGreaterMight="Interface\\Icons\\Spell_Holy_GreaterBlessingofKings"
+ryn.buffGreaterWisdom="Interface\\Icons\\Spell_Holy_GreaterBlessingofWisdom"
+ryn.buffGreaterLight="Interface\\Icons\\Spell_Holy_GreaterBlessingofLight"
+ryn.buffGreaterSalvation="Interface\\Icons\\Spell_Holy_GreaterBlessingofSalvation"
+ryn.buffGreaterKings="Interface\\Icons\\Spell_Magic_GreaterBlessingofKings"
+ryn.buffDivineFavor="Interface\\Icons\\Spell_Holy_Heal"
+--ryn.buffDevotionAura="Interface\\Icons\\Spell_Holy_DevotionAura"
+--ryn.buffRetributionAura="Interface\\Icons\\Spell_Holy_AuraOfLight"
+--ryn.buffConcentrationAura="Interface\\Icons\\Spell_Holy_MindSooth"
+--ryn.buffShadowAura="Interface\\Icons\\Spell_Shadow_SealOfKings"
+--ryn.buffFrostAura="Interface\\Icons\\Spell_Frost_WizardMark"
+--ryn.buffFireAura="Interface\\Icons\\Spell_Fire_SealOfFire"
 
-class.healRange="Holy Light(Rank 1)"
-class.dispelRange="Purify"
+ryn.healRange="Holy Light(Rank 1)"
+ryn.dispelRange="Purify"
 
-class.buffProfiles={
-	might={"Blessing of Might",class.buffMight,{PRIEST=true,MAGE=true,WARLOCK=true},{}},
-	wisdom={"Blessing of Wisdom",class.buffWisdom,{WARRIOR=true,ROGUE=true},{}},
-	salvation={"Blessing of Salvation",class.buffSalvation,{},{tank=true}},
-	kings={"Blessing of Kings",class.buffKings,{},{}},
-	light={"Blessing of Light",class.buffLight,{},{}},
-	greaterMight={"Greater Blessing of Might",class.buffGreaterMight,{PRIEST=true,MAGE=true,WARLOCK=true},{}},
-	greaterWisdom={"Greater Blessing of Wisdom",class.buffGreaterWisdom,{WARRIOR=true,ROGUE=true},{}},
-	greaterSalvation={"Greater Blessing of Salvation",class.buffGreaterSalvation,{},{tank=true}},
-	greaterKings={"Greater Blessing of Kings",class.buffGreaterKings,{},{}},
-	greaterLight={"Greater Blessing of Light",class.buffGreaterLight,{},{}}
+ryn.buffProfiles={
+	might={"Blessing of Might",ryn.buffMight,{PRIEST=true,MAGE=true,WARLOCK=true},{}},
+	wisdom={"Blessing of Wisdom",ryn.buffWisdom,{WARRIOR=true,ROGUE=true},{}},
+	salvation={"Blessing of Salvation",ryn.buffSalvation,{},{tank=true}},
+	kings={"Blessing of Kings",ryn.buffKings,{},{}},
+	light={"Blessing of Light",ryn.buffLight,{},{}},
+	greaterMight={"Greater Blessing of Might",ryn.buffGreaterMight,{PRIEST=true,MAGE=true,WARLOCK=true},{}},
+	greaterWisdom={"Greater Blessing of Wisdom",ryn.buffGreaterWisdom,{WARRIOR=true,ROGUE=true},{}},
+	greaterSalvation={"Greater Blessing of Salvation",ryn.buffGreaterSalvation,{},{tank=true}},
+	greaterKings={"Greater Blessing of Kings",ryn.buffGreaterKings,{},{}},
+	greaterLight={"Greater Blessing of Light",ryn.buffGreaterLight,{},{}}
 }
-class.buffCustom={
-	Harklen={"Greater Blessing of Light",class.buffGreaterLight},
-	Ryonn={"Greater Blessing of Wisdom",class.buffGreaterWisdom},
-	Inochi={"Greater Blessing of Wisdom",class.buffGreaterWisdom},
-	Nymira={"Greater Blessing of Salvation",class.buffGreaterSalvation},
-	Seloris={"Greater Blessing of Salvation",class.buffGreaterSalvation},
-	Alaniel={"Greater Blessing of Wisdom",class.buffGreaterWisdom},
-	Arvene={"Greater Blessing of Salvation",class.buffGreaterSalvation}
+ryn.buffCustom={
+	Harklen={"Greater Blessing of Light",ryn.buffGreaterLight},
+	Ryonn={"Greater Blessing of Wisdom",ryn.buffGreaterWisdom},
+	Inochi={"Greater Blessing of Wisdom",ryn.buffGreaterWisdom},
+	Nymira={"Greater Blessing of Salvation",ryn.buffGreaterSalvation},
+	Seloris={"Greater Blessing of Salvation",ryn.buffGreaterSalvation},
+	Alaniel={"Greater Blessing of Wisdom",ryn.buffGreaterWisdom},
+	Arvene={"Greater Blessing of Salvation",ryn.buffGreaterSalvation}
 }
 
 -- NOTE: Do NOT use nil if you want to omit a heal profile entry parameter, use false instead.
@@ -74,7 +71,7 @@ class.buffCustom={
 -- HL: 660,580,465,365,275,190,110,60,35
 -- FOL: 140,115,90,70,50,35
 
-class.healProfiles={
+ryn.healProfiles={
 	regular={
 		{0.4 , 720, "Divine Favor"},
 		{0.4 , 660, "Holy Light"},
@@ -130,13 +127,13 @@ ryn.classEventFrame:RegisterEvent("SPELLCAST_DELAYED")
 ryn.classEventFrame:RegisterEvent("SPELLCAST_STOP")
 ryn.classEventFrame:SetScript("OnEvent",ryn.ClassEventHandler)
 
-class.HealTarget=function(healProfile,target,hp)
-	if class.healProfiles[healProfile] then
-		for i,healProfileEntry in ipairs(class.healProfiles[healProfile]) do
+ryn.HealTarget=function(healProfile,target,hp)
+	if ryn.healProfiles[healProfile] then
+		local mana=UnitMana("player")
+		for i,healProfileEntry in ipairs(ryn.healProfiles[healProfile]) do
 			local hpThreshold,manaCost,spellName,healMode,lTargetList,withCdOnly=unpack(healProfileEntry)
-			local mana=UnitMana("player")
 			ryn.currentHealFinish=nil
-			if mana>=manaCost and (not withCdOnly or ryn.BuffCheck("player",class.buffDivineFavor)) and ryn.GetSpellCooldownByName(spellName)==0 then
+			if mana>=manaCost and (not withCdOnly or ryn.BuffCheck("player",ryn.buffDivineFavor)) and ryn.GetSpellCooldownByName(spellName)==0 then
 				if (not healMode or healMode==1) and target and hp<hpThreshold and (not lTargetList or ryn.targetList[lTargetList][target]) then
 					--ryn.Debug("Executing heal profile \""..healProfile.."\", entry: "..i)
 					ryn.targetList.all[target].blacklist=nil
@@ -166,7 +163,7 @@ class.HealTarget=function(healProfile,target,hp)
 	end
 end
 
-class.DispelTarget=function(target)
+ryn.DispelTarget=function(target)
 	if target then
 		ryn.targetList.all[target].blacklist=nil
 		ryn.currentHealTarget=target
@@ -192,8 +189,8 @@ ryn.Buff=function(lTargetList,defaultAura,buffProfile)
 	end
 	if buffProfile then
 		if buffProfile~="custom" then
-			if class.buffProfiles[buffProfile] then
-				local spell,buff,classExcl,roleExcl=unpack(class.buffProfiles[buffProfile])
+			if ryn.buffProfiles[buffProfile] then
+				local spell,buff,classExcl,roleExcl=unpack(ryn.buffProfiles[buffProfile])
 				for target,info in pairs(lTargetList) do
 					if not classExcl[info.class] and not roleExcl[info.role] and not ryn.BuffCheck(target,buff) then
 						ryn.ClearFriendlyTarget()
@@ -208,7 +205,7 @@ ryn.Buff=function(lTargetList,defaultAura,buffProfile)
 			end
 		else
 			for target,info in pairs(lTargetList) do
-				local customBuff=class.buffCustom[info.name]
+				local customBuff=ryn.buffCustom[info.name]
 				if customBuff then
 					local spell,buff=unpack(customBuff)
 					if not ryn.BuffCheck(target,buff) then
@@ -229,9 +226,9 @@ end
 ryn.Heal=function(lTargetList,healProfile)
 	lTargetList=lTargetList or ryn.targetList.all
 	healProfile=healProfile or "regular"
-	if ryn.SpellCastReady(class.healRange,ryn.stopCastingDelayExpire) then
-		local target,hp=ryn.GetHealTarget(lTargetList,class.healRange)
-		class.HealTarget(healProfile,target,hp)
+	if ryn.SpellCastReady(ryn.healRange,ryn.stopCastingDelayExpire) then
+		local target,hp=ryn.GetHealTarget(lTargetList,ryn.healRange)
+		ryn.HealTarget(healProfile,target,hp)
 	else
 		ryn.HealInterrupt()
 	end
@@ -249,9 +246,9 @@ ryn.Dispel=function(lTargetList,dispelTypes,dispelByHp)
 	lTargetList=lTargetList or ryn.targetList.all
 	dispelTypes=dispelTypes or ryn.dispelAll
 	dispelByHp=dispelByHp or false
-	if ryn.SpellCastReady(class.dispelRange) then
-		local target=ryn.GetDispelTarget(lTargetList,class.dispelRange,dispelTypes,dispelByHp)
-		class.DispelTarget(target)
+	if ryn.SpellCastReady(ryn.dispelRange) then
+		local target=ryn.GetDispelTarget(lTargetList,ryn.dispelRange,dispelTypes,dispelByHp)
+		ryn.DispelTarget(target)
 	end
 end
 
@@ -261,12 +258,12 @@ ryn.HealOrDispel=function(lTargetList,healProfile,dispelTypes,dispelByHp,dispelH
 	dispelTypes=dispelTypes or ryn.dispelAll
 	dispelByHp=dispelByHp or false
 	dispelHpThreshold=dispelHpThreshold or 0.4
-	if ryn.SpellCastReady(class.healRange,ryn.stopCastingDelayExpire) then
-		local target,hpOrDebuffType,_,_,action=ryn.GetHealOrDispelTarget(lTargetList,class.healRange,nil,class.dispelRange,dispelTypes,dispelByHp,dispelHpThreshold)
+	if ryn.SpellCastReady(ryn.healRange,ryn.stopCastingDelayExpire) then
+		local target,hpOrDebuffType,_,_,action=ryn.GetHealOrDispelTarget(lTargetList,ryn.healRange,nil,ryn.dispelRange,dispelTypes,dispelByHp,dispelHpThreshold)
 		if action=="heal" then
-			class.HealTarget(healProfile,target,hpOrDebuffType)
+			ryn.HealTarget(healProfile,target,hpOrDebuffType)
 		else
-			class.DispelTarget(target)
+			ryn.DispelTarget(target)
 		end
 	else
 		ryn.HealInterrupt()

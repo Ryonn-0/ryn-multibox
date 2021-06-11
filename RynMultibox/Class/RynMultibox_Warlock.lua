@@ -1,12 +1,10 @@
-local class
-
 if ryn.playerClass=="WARLOCK" then
-class={}
 
-class.buffDemon="Interface\\Icons\\Spell_Shadow_RagingScream"
-class.buffFire="Interface\\Icons\\Spell_Fire_FireArmor"
---class.buffSoulstone="Interface\\Icons\\Spell_Shadow_SoulGem"
-class.curses={
+ryn.buffDemon="Interface\\Icons\\Spell_Shadow_RagingScream"
+ryn.buffFire="Interface\\Icons\\Spell_Fire_FireArmor"
+--ryn.buffSoulstone="Interface\\Icons\\Spell_Shadow_SoulGem"   -- This is already declared as an addon global variable for SS check
+
+ryn.curses={
 	doom={spell="Curse of Doom",debuff="Interface\\Icons\\Spell_Shadow_AuraOfDarkness",mana=300},
 	recklessness={spell="Curse of Recklessness",debuff="Interface\\Icons\\Spell_Shadow_UnholyStrength",mana=115},
 	shadow={spell="Curse of Shadow",debuff="Interface\\Icons\\Spell_Shadow_CurseOfAchimonde",mana=200},
@@ -17,7 +15,7 @@ class.curses={
 	exhaustion={spell="Curse of Exhaustion",debuff="Interface\\Icons\\Spell_Shadow_GrimWard",mana=109,amplify=true}
 }
 
-class.tapThreshold=0.4
+ryn.tapThreshold=0.4
 
 ryn.Buff=function(lTargetList)
 	lTargetList=lTargetList or ryn.targetList.all
@@ -25,19 +23,21 @@ ryn.Buff=function(lTargetList)
 		if UnitMana("player")>=1098 then
 			CastSpellByName("Summon Imp")
 			return
-		elseif not ryn.HpLower("player",class.tapThreshold) then
+		elseif not ryn.HpLower("player",ryn.tapThreshold) then
 			CastSpellByName("Life Tap")
 			return
 		end
-	elseif not ryn.BuffCheck("player",class.buffDemon) then
+	elseif not ryn.BuffCheck("player",ryn.buffDemon) then
 		if UnitMana("player")>=1580 then
 			CastSpellByName("Demon Armor")
-		elseif not ryn.HpLower("player",class.tapThreshold) then
+		elseif not ryn.HpLower("player",ryn.tapThreshold) then
 			CastSpellByName("Life Tap")
 		end
+	elseif not ryn.HpLower("player",ryn.tapThreshold) and ryn.ManaLower("player",0.85) then
+		CastSpellByName("Life Tap")
 	end
 	for target,info in pairs(lTargetList) do
-		if info.role=="tank" and not ryn.BuffCheck(target,class.buffFire) then
+		if info.role=="tank" and not ryn.BuffCheck(target,ryn.buffFire) then
 			TargetUnit(target)
 			CastSpellByName("Fire Shield")
 		end
@@ -51,17 +51,18 @@ ryn.CC=function()
 			CastSpellByName("Banish")
 		elseif mana>=205 then
 			CastSpellByName("Fear")
-		elseif not ryn.HpLower("player",class.tapThreshold) then
+		elseif not ryn.HpLower("player",ryn.tapThreshold) then
 			CastSpellByName("Life Tap")
 		end
 	end
 end
 
 ryn.Dps=function(curse,drainThreshold)
-	if not ryn.IsCastingOrChanelling() and ryn.GetHostileTarget() then
+	if ryn.IsCastingOrChanelling() then return end
+	if ryn.GetHostileTarget() then
 		local mana,noMana=UnitMana("player"),false
 		if curse then
-			curse=class.curses[curse]
+			curse=ryn.curses[curse]
 		end
 		if ryn.damageType.shadow then
 			if drainThreshold and mana>=290 and ryn.HpLower("target",drainThreshold) then
@@ -88,9 +89,11 @@ ryn.Dps=function(curse,drainThreshold)
 				noMana=true
 			end
 		end
-		if noMana and not ryn.HpLower("player",class.tapThreshold) then
+		if noMana and not ryn.HpLower("player",ryn.tapThreshold) then
 			CastSpellByName("Life Tap")
 		end
+	elseif not ryn.HpLower("player",ryn.tapThreshold) and ryn.ManaLower("player",0.85) then
+		CastSpellByName("Life Tap")
 	end
 	-- TODO: Use wand if Life Tap can not be cast or below a hp threshold.
 end

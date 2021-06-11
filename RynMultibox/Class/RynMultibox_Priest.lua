@@ -1,16 +1,13 @@
-local class
-
 if ryn.playerClass=="PRIEST" then
-class={}
 
-class.buffAbolishDisease="Interface\\Icons\\Spell_Nature_NullifyDisease"
-class.buffRenew="Interface\\Icons\\Spell_Holy_Renew"
-class.buffInnerFocus="Interface\\Icons\\Spell_Frost_WindWalkOn"
-class.debuffWeakenedSoul="Interface\\Icons\\Spell_Holy_AshesToAshes"
+ryn.buffAbolishDisease="Interface\\Icons\\Spell_Nature_NullifyDisease"
+ryn.buffRenew="Interface\\Icons\\Spell_Holy_Renew"
+ryn.buffInnerFocus="Interface\\Icons\\Spell_Frost_WindWalkOn"
+ryn.debuffWeakenedSoul="Interface\\Icons\\Spell_Holy_AshesToAshes"
 
-class.healRange="Lesser Heal(Rank 1)"
-class.dispelRange="Cure Disease"
-class.aoeHealMinPlayers=3
+ryn.healRange="Lesser Heal(Rank 1)"
+ryn.dispelRange="Cure Disease"
+ryn.aoeHealMinPlayers=3
 
 ryn.ClassEventHandler=function()
 	if event=="UI_ERROR_MESSAGE" and arg1=="Target not in line of sight" then
@@ -37,14 +34,14 @@ ryn.classEventFrame:RegisterEvent("SPELLCAST_DELAYED")
 ryn.classEventFrame:RegisterEvent("SPELLCAST_STOP")
 ryn.classEventFrame:SetScript("OnEvent",ryn.ClassEventHandler)
 
-class.healProfiles={
+ryn.healProfiles={
 	regular={
-		{0.4 , 380, "Flash Heal",1,"tank"},
+		{1   , 0  , "Prayer of Healing",4,false,true},
+		{0.5 , 380, "Flash Heal",1,"tank"},
 		{0.5 , 0  , "Inner Focus",4},
-		{0.5 , 0  , "Prayer of Healing",4,false,true},
-		{0.8 , 410, "Prayer of Healing(Rank 1)",4},
 		{0.3 , 380, "Flash Heal"},
 		{0.5 , 215, "Flash Heal(Rank 4)"},
+		{0.8 , 410, "Prayer of Healing(Rank 1)",4},
 		{0.6 , 259, "Heal(Rank 4)"},
 		{0.7 , 216, "Heal(Rank 3)"},
 		{0.8 , 174, "Heal(Rank 2)"},
@@ -53,12 +50,13 @@ class.healProfiles={
 		{0.9 , 259, "Heal",2}
 	},
 	renewSpam={
+		{1   , 0  , "Prayer of Healing",4,false,true},
 		{0.5 , 380, "Flash Heal",1,"tank"},
 		{0.5 , 0  , "Inner Focus",4},
-		{0.5 , 0  , "Prayer of Healing",4,false,true},
-		{0.8 , 410, "Prayer of Healing(Rank 1)",4},
 		{0.65, 259, "Heal",1,"tank"},
-		{0.4 , 259, "Heal"},
+		{0.3 , 380, "Flash Heal"},
+		{0.45, 259, "Heal"},
+		{0.8 , 410, "Prayer of Healing(Rank 1)",4},
 		{0.6 , 184, "Renew(Rank 6)",3},
 		{0.9 , 94 , "Renew(Rank 3)",3},
 		{0.9 , 131, "Heal(Rank 1)"},
@@ -66,7 +64,7 @@ class.healProfiles={
 	},
 	instantOnly={
 		{0.6 , 184, "Power Word: Shield",1,"tank"},
-		{0.3 , 184, "Power Word: Shield"},
+		--{0.3 , 184, "Power Word: Shield"},
 		{0.6 , 184, "Renew(Rank 6)",3},
 		{0.9 , 94 , "Renew(Rank 3)",3}
 	},
@@ -77,16 +75,16 @@ class.healProfiles={
 	}
 }
 
-class.HealTarget=function(healProfile,target,hp,hotTarget,hotHp,aoeInfo)
-	if class.healProfiles[healProfile] then
-		for i,healProfileEntry in ipairs(class.healProfiles[healProfile]) do
+ryn.HealTarget=function(healProfile,target,hp,hotTarget,hotHp,aoeInfo)
+	if ryn.healProfiles[healProfile] then
+		local mana=UnitMana("player")
+		for i,healProfileEntry in ipairs(ryn.healProfiles[healProfile]) do
 			local hpThreshold,manaCost,spellName,healMode,lTargetList,withCdOnly=unpack(healProfileEntry)
-			local mana=UnitMana("player")
 			currentHealFinish=nil
-			if mana>=manaCost and (not withCdOnly or ryn.BuffCheck("player",class.buffInnerFocus)) and ryn.GetSpellCooldownByName(spellName)==0 then
+			if mana>=manaCost and (not withCdOnly or ryn.BuffCheck("player",ryn.buffInnerFocus)) and ryn.GetSpellCooldownByName(spellName)==0 then
 				if (not healMode or healMode==1) and target and hp<hpThreshold and (not lTargetList or ryn.targetList[lTargetList][target]) then
 					--ryn.Debug("Executing heal profile \""..healProfile.."\", entry: "..i)
-					if strfind(spellName,"Power Word: Shield",1,1) and ryn.DebuffCheck(target,class.debuffWeakenedSoul) then
+					if strfind(spellName,"Power Word: Shield",1,1) and ryn.DebuffCheck(target,ryn.debuffWeakenedSoul) then
 						break
 					end
 					ryn.targetList.all[target].blacklist=nil
@@ -117,7 +115,7 @@ class.HealTarget=function(healProfile,target,hp,hotTarget,hotHp,aoeInfo)
 					CastSpellByName(spellName)
 					SpellTargetUnit(hotTarget)
 					break
-				elseif healMode==4 and aoeInfo[class.aoeHealMinPlayers] and aoeInfo[class.aoeHealMinPlayers].hpRatio<hpThreshold then
+				elseif healMode==4 and aoeInfo[ryn.aoeHealMinPlayers] and aoeInfo[ryn.aoeHealMinPlayers].hpRatio<hpThreshold then
 					--ryn.Debug("Executing heal profile \""..healProfile.."\", entry: "..i)
 					ryn.currentHealTarget=nil
 					CastSpellByName(spellName)
@@ -128,7 +126,7 @@ class.HealTarget=function(healProfile,target,hp,hotTarget,hotHp,aoeInfo)
 	end
 end
 
-class.DispelTarget=function(target,debuffType)
+ryn.DispelTarget=function(target,debuffType)
 	if target then
 		ryn.targetList.all[target].blacklist=nil
 		ryn.currentHealTarget=target
@@ -136,7 +134,7 @@ class.DispelTarget=function(target,debuffType)
 		if debuffType=="Magic" then
 			ClearTarget()
 			CastSpellByName("Dispel Magic")
-		elseif not ryn.BuffCheck(target,class.buffAbolishDisease) then
+		elseif not ryn.BuffCheck(target,ryn.buffAbolishDisease) then
 			CastSpellByName("Abolish Disease")
 		else
 			CastSpellByName("Cure Disease")
@@ -145,9 +143,9 @@ class.DispelTarget=function(target,debuffType)
 	end
 end
 
-class.AoeInfo=function()
+ryn.AoeInfo=function()
 	ryn.ClearFriendlyTarget()
-	CastSpellByName(class.dispelRange)
+	CastSpellByName(ryn.dispelRange)
 	local playerCount,playerHps=0,{}
 	for target,info in pairs(ryn.targetList.party) do
 		local hp=UnitHealth(target)/UnitHealthMax(target)
@@ -164,10 +162,10 @@ end
 ryn.Heal=function(lTargetList,healProfile)
 	lTargetList=lTargetList or ryn.targetList.all
 	healProfile=healProfile or "regular"
-	if ryn.SpellCastReady(class.healRange,ryn.stopCastingDelayExpire) then
-		local target,hp,hotTarget,hotHp=ryn.GetHealTarget(lTargetList,class.healRange,class.buffRenew)
-		local aoeInfo=class.AoeInfo()
-		class.HealTarget(healProfile,target,hp,hotTarget,hotHp,aoeInfo)
+	if ryn.SpellCastReady(ryn.healRange,ryn.stopCastingDelayExpire) then
+		local target,hp,hotTarget,hotHp=ryn.GetHealTarget(lTargetList,ryn.healRange,ryn.buffRenew)
+		local aoeInfo=ryn.AoeInfo()
+		ryn.HealTarget(healProfile,target,hp,hotTarget,hotHp,aoeInfo)
 	else
 		ryn.HealInterrupt()
 	end
@@ -181,9 +179,9 @@ ryn.Dispel=function(lTargetList,dispelTypes,dispelByHp)
 	lTargetList=lTargetList or ryn.targetList.all
 	dispelTypes=dispelTypes or ryn.dispelAll
 	dispelByHp=dispelByHp or false
-	if ryn.SpellCastReady(class.dispelRange) then
-		local target,debuffType=ryn.GetDispelTarget(lTargetList,class.dispelRange,dispelAll,false)
-		class.DispelTarget(target,debuffType)
+	if ryn.SpellCastReady(ryn.dispelRange) then
+		local target,debuffType=ryn.GetDispelTarget(lTargetList,ryn.dispelRange,dispelAll,false)
+		ryn.DispelTarget(target,debuffType)
 	end
 end
 
@@ -193,13 +191,13 @@ ryn.HealOrDispel=function(lTargetList,healProfile,dispelTypes,dispelByHp,dispelH
 	dispelTypes=dispelTypes or ryn.dispelAll
 	dispelByHp=dispelByHp or false
 	dispelHpThreshold=dispelHpThreshold or 0.4
-	if ryn.SpellCastReady(class.healRange,stopCastingDelayExpire) then
-		local target,hpOrDebuffType,hotTarget,hotHp,action=ryn.GetHealOrDispelTarget(lTargetList,class.healRange,class.buffRenew,class.dispelRange,dispelTypes,dispelByHp,dispelHpThreshold)
+	if ryn.SpellCastReady(ryn.healRange,stopCastingDelayExpire) then
+		local target,hpOrDebuffType,hotTarget,hotHp,action=ryn.GetHealOrDispelTarget(lTargetList,ryn.healRange,ryn.buffRenew,ryn.dispelRange,dispelTypes,dispelByHp,dispelHpThreshold)
 		if action=="heal" then
-			local aoeInfo=class.AoeInfo()
-			class.HealTarget(healProfile,target,hpOrDebuffType,hotTarget,hotHp,aoeInfo)
+			local aoeInfo=ryn.AoeInfo()
+			ryn.HealTarget(healProfile,target,hpOrDebuffType,hotTarget,hotHp,aoeInfo)
 		else
-			class.DispelTarget(target,hpOrDebuffType)
+			ryn.DispelTarget(target,hpOrDebuffType)
 		end
 	else
 		ryn.HealInterrupt()
