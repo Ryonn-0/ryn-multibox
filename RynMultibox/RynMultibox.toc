@@ -5,6 +5,7 @@
 RynMultibox.lua
 RynMultibox_Group.lua
 RynMultibox_Spell.lua
+RynMultibox_Comm.lua
 Class\RynMultibox_Druid.lua
 Class\RynMultibox_Hunter.lua
 Class\RynMultibox_Mage.lua

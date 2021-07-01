@@ -72,7 +72,7 @@ ryn.RangedDps=function()
 		if ryn.aimedShotExpire>=GetTime() and ryn.IsActionReady(ryn.aimedShotActionSlot) then
 			CastSpellByName("Aimed Shot")
 			ryn.ignoreNext=true
-		elseif ryn.aoeEnabled and ryn.multiShotExpire>=GetTime() and ryn.IsActionReady(ryn.multiShotActionSlot) then
+		elseif ryn.damageType.aoe and ryn.multiShotExpire>=GetTime() and ryn.IsActionReady(ryn.multiShotActionSlot) then
 			CastSpellByName("Multi-Shot")
 			ryn.ignoreNext=true
 		end

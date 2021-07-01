@@ -1,7 +1,7 @@
 -- Group management
 
 local nameList={
-	tank={"Harklen","Gaelber","Llanewrynn","Stardancer","Cooperbeard","Dobzse","Obier","Yxon","Amonstenn","Fierileya","Peacebringer","Bendegúz","Pinky","Paladino"},
+	tank={"Harklen","Gaelber","Llanewrynn","Stardancer","Cooperbeard","Dobzse","Obier","Yxon","Amonstenn","Fierileya","Peacebringer","Bendegúz","Pinky","Paladino","Naderius"},
 	heal={"Alaniel","Flo","Livia","Hoyt","Myra","Papsajt","Negreanu","Kearlah","Azure","Warrógép","Rhodelya","Blueyes"},
 	multiHeal={
 	"Dreamblast","Skyx","Uyalin","Illumyn", -- Kearlah   (paladino temp tank)

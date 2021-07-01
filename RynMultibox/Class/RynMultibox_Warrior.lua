@@ -35,6 +35,8 @@ ryn.TankDps=function()
 		elseif not IsCurrentAction(ryn.autoAttackActionSlot) then
 			CastSpellByName("Attack")
 		end
+	elseif IsCurrentAction(ryn.autoAttackActionSlot) then
+		CastSpellByName("Attack")
 	end
 end
 

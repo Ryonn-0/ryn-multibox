@@ -15,7 +15,8 @@ local backdropBorderOnly={
 }
 
 mw.window=CreateFrame("Frame",nil,UIParent)
-mw.window:Hide()
+--mw.window:Hide()
+mw.window:Show()
 mw.window:SetFrameStrata("DIALOG")
 mw.window:SetWidth(200)
 mw.window:SetHeight(120)
@@ -51,14 +52,15 @@ ryn.CheckButtonFactory=function(name,parent,texture,posX,posY,location,index)
 	mw[name]:SetCheckedTexture(texture)
 	mw[name]:SetNormalTexture(texture)
 	mw[name]:SetScript("OnClick",function()
-		location[index]=mw[name]:GetChecked()
+		if mw[name]:GetChecked() then location[index]=true else location[index]=false end
+		ryn.Sync("syncDamageType")
 	end)
 end
 
 ryn.CheckButtonFactory("tankEnabled",mw.window,"Interface\\Icons\\Ability_Warrior_DefensiveStance",12,-40,ryn.damageType,"tank")
 ryn.CheckButtonFactory("meleeEnabled",mw.window,"Interface\\Icons\\Ability_DualWield",48,-40,ryn.damageType,"melee")
 ryn.CheckButtonFactory("rangedEnabled",mw.window,"Interface\\Icons\\Ability_PierceDamage",84,-40,ryn.damageType,"ranged")
-ryn.CheckButtonFactory("aoeEnabled",mw.window,"Interface\\Icons\\Ability_Whirlwind",156,-40,ryn,"aoeEnabled")
+ryn.CheckButtonFactory("aoeEnabled",mw.window,"Interface\\Icons\\Ability_Whirlwind",156,-40,ryn.damageType,"aoe")
 ryn.CheckButtonFactory("frostEnabled",mw.window,"Interface\\Icons\\Spell_Frost_FrostWard",12,-76,ryn.damageType,"frost")
 ryn.CheckButtonFactory("fireEnabled",mw.window,"Interface\\Icons\\Spell_Fire_SealOfFire",48,-76,ryn.damageType,"fire")
 ryn.CheckButtonFactory("arcaneEnabled",mw.window,"Interface\\Icons\\Spell_Nature_WispSplode",84,-76,ryn.damageType,"arcane")

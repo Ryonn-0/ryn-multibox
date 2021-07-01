@@ -14,8 +14,7 @@ ryn.blacklistTime=10
 ryn.retryBlacklist=true
 -- true: Try to heal/dispel blacklisted players, when no non-blacklisted player needs healing/dispelling.
 -- false: Blacklisted players won't get heals/dispels until blacklist time expires.
-ryn.aoeEnabled=true
-ryn.damageType={arcane=true,fire=true,frost=true,holy=true,melee=true,nature=true,ranged=true,shadow=true,tank=true}
+ryn.damageType={arcane=true,fire=true,frost=true,melee=true,nature=true,ranged=true,shadow=true,tank=true,aoe=true}
 
 -- Addon global variables
 _,ryn.playerClass=UnitClass("player")
