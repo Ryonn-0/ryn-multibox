@@ -23,6 +23,7 @@ ryn.buffSoulstone="Interface\\Icons\\Spell_Shadow_SoulGem"
 --ryn.currentHealTarget
 --ryn.currentHealFinish
 --ryn.precastHpThreshold
+--ryn.dpsCooldownToggle
 
 ryn.Debug=function(message,carry)
 	local t,s=type(message),""
@@ -372,6 +373,10 @@ ryn.UnequipItemBySlotId=function(invSlotId)
 		PutItemInBackpack()
 		return itemLink
 	end
+end
+
+ryn.DpsCD=function()
+	ryn.dpsCooldownToggle=true
 end
 
 ryn.addOns={"Bartender2","Cartographer","!ImprovedErrorFrame","MobInfo2","!OmniCC","XPerl","XPerl_Options","XPerl_Party","XPerl_PartyPet","XPerl_Player","XPerl_PlayerPet"

@@ -51,7 +51,7 @@ ryn.healProfiles={
 	},
 	renewSpam={
 		{1   , 0  , "Prayer of Healing",4,false,true},
-		{0.5 , 380, "Flash Heal",1,"tank"},
+		{0.5 , 380, "Flash Heal",1,"tank"}, --0.5
 		{0.5 , 0  , "Inner Focus",4},
 		{0.65, 259, "Heal",1,"tank"},
 		{0.3 , 380, "Flash Heal"},
@@ -64,7 +64,7 @@ ryn.healProfiles={
 	},
 	instantOnly={
 		{0.6 , 184, "Power Word: Shield",1,"tank"},
-		--{0.3 , 184, "Power Word: Shield"},
+		{0.3 , 184, "Power Word: Shield"},
 		{0.6 , 184, "Renew(Rank 6)",3},
 		{0.9 , 94 , "Renew(Rank 3)",3}
 	},

@@ -81,8 +81,8 @@ ryn.healProfiles={
 		{0.9 , 140, "Flash of Light",2}
 	},
 	hlTankOnly={
-		{0.4 , 720, "Divine Favor",1,"tank"},
-		{0.4 , 660, "Holy Light",1,"tank"},
+		{0.45, 720, "Divine Favor",1,"tank"},
+		{0.45, 660, "Holy Light",1,"tank"},
 		{0.6 , 140, "Flash of Light"},
 		{0.8 , 70 , "Flash of Light(Rank 3)"},
 		{0.9 , 35 , "Flash of Light(Rank 1)"},

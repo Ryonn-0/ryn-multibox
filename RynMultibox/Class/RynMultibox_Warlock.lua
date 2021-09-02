@@ -64,6 +64,10 @@ ryn.Dps=function(curse,drainThreshold)
 		if curse then
 			curse=ryn.curses[curse]
 		end
+		if ryn.dpsCooldownToggle then
+			if ryn.UseTrinkets() then return
+			else ryn.dpsCooldownToggle=false end
+		end
 		if ryn.damageType.shadow then
 			if drainThreshold and mana>=290 and ryn.HpLower("target",drainThreshold) then
 				CastSpellByName("Drain Soul")

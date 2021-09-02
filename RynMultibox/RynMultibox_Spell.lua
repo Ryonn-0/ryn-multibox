@@ -1,12 +1,17 @@
 -- Spell management
 
--- TODO: Action slot mapping and pet abilities
+local invSlotName={"Head","Neck","Shoulder","Shirt","Chest","Waist","Legs","Feet","Wrist","Hands",
+	"Finger 1","Finger 2","Trinket 1","Trinket 2","Back","Main hand","Off hand","Ranged","Tabard"}
+invSlotName[0]="Ammo"
+
+-- TODO: Pet abilities
 
 -- spellData:{spellKey,spellName,spellRank,spellID,bookType,isMaxRank,actionSlot,actionMulti}
 -- spellKey -> spellData
 local spellData={}
 -- actionSlot -> spellData
 local actionData={}
+local itemData={}
 
 ryn.BuildSpellData=function()
 	local i=1
@@ -25,7 +30,7 @@ ryn.BuildSpellData=function()
 		if strfind(lSpellRank,"Rank",1,1) then
 			lMaxSpell,lMaxRank=lSpellName,lSpellRank
 			spellDataKey=lSpellName.."("..lSpellRank..")"
-			local _,_spellRankNum=string.find(lSpellRank,"(%d+)")
+			local _,_,spellRankNum=string.find(lSpellRank,"(%d+)")
 			spellRankNum=tonumber(spellRankNum)
 			spellData[spellDataKey]={spellKey=spellDataKey,spellName=lSpellName,spellRank=spellRankNum,spellId=i,bookType="BOOKTYPE_SPELL"}
 		elseif lSpellRank~="Passive" and lSpellRank~="Racial Passive" then
@@ -96,13 +101,44 @@ ryn.GetSpellCooldownByName=function(spellName)
 	if spellEntry then
 		return GetSpellCooldown(spellEntry.spellId,spellEntry.bookType)
 	end
-	return nil
 end
 
 ryn.GetActionSlot=function(spellName)
 	local spellEntry=spellData[spellName]
 	if spellEntry then
 		return spellEntry.actionSlot
+	end
+end
+
+ryn.GetItemCooldown=function(slotName)
+	local item=itemData[slotName]
+	if item then
+		return GetActionCooldown(item.actionSlot)
+	end
+end
+
+ryn.UseItem=function(slotName)
+	local item=itemData[slotName]
+	if item then
+		UseAction(item.actionSlot)
+	end
+end
+
+ryn.UseTrinkets=function()
+	if ryn.GetItemCooldown("Trinket 1")==0 then
+		ryn.UseItem("Trinket 1")
+		return true
+	elseif ryn.GetItemCooldown("Trinket 2")==0 then
+		ryn.UseItem("Trinket 2")
+		return true
+	end
+	return false
+end
+
+ryn.Mount=function()
+	local mount=itemData["Fast mount"] or itemData["Slow mount"] or spellData["Summon Warhorse"] or spellData["Summon Felsteed"]
+	if mount and mount.actionSlot then
+		UseAction(mount.actionSlot)
 	end
 end
 
@@ -141,28 +177,62 @@ ryn.ActionSlotUpdate=function(slot,isInit)
 				actionData[slot]=currentSpellData
 			end
 		else
-			-- TODO: handle non-spell actions
+			if IsEquippedAction(slot) then
+				--ryn.Debug("Equipped: "..slot)
+				for i=1,18 do
+					local _,_,itemName=string.find(GetInventoryItemLink("player",i),"%[(.*)%]")
+					if itemName==name then
+						local currentInvSlot=invSlotName[i]
+						itemData[currentInvSlot]={actionType="Equipped",invSlot=currentInvSlot,itemName=name,actionSlot=slot}
+						actionData[slot]=itemData[currentInvSlot]
+						break
+					end
+				end
+			elseif IsConsumableAction(slot) then
+				--ryn.Debug("Consumable: "..slot)
+				-- Something
+			else
+				--ryn.Debug("Other: "..slot)
+				local line,i="",2
+				while line~=nil do
+					line=getglobal("RynTooltipTextLeft"..i):GetText()
+					if line=="Requires Riding (150)" then
+						--ryn.Debug("Fast mount")
+						itemData["Fast mount"]={actionType="Mount",itemName=name,actionSlot=slot}
+					elseif line=="Requires Riding (75)" then
+						if strfind(name,"Qiraji Resonating") then
+							--ryn.Debug("AQ mount")
+							itemData["AQ mount"]={actionType="Mount",itemName=name,actionSlot=slot}
+						else
+							--ryn.Debug("Slow mount")
+							itemData["Slow mount"]={actionType="Mount",itemName=name,actionSlot=slot}
+						end
+					end
+					i=i+1
+				end
+			end
 		end
 	elseif not isInit then
-		local currentSpellData=actionData[slot]
-		if currentSpellData then
-			actionData[slot]=nil
-			if currentSpellData.actionMulti then
+		local currentData=actionData[slot]
+		if not currentData then return end
+		actionData[slot]=nil
+		if currentData.spellKey then
+			if currentData.actionMulti then
 				for iSlot,iSpellData in actionData do
 					local found=false
-					if iSpellData.spellKey==currentSpellData.spellKey then
+					if iSpellData.spellKey==currentData.spellKey then
 						if found then
-							currentSpellData.actionMulti=true
+							currentData.actionMulti=true
 							break
 						else
-							currentSpellData.actionSlot=iSlot
-							currentSpellData.actionMulti=false
+							currentData.actionSlot=iSlot
+							currentData.actionMulti=false
 							found=true
 						end
 					end
 				end
 			else
-				currentSpellData.actionSlot=nil
+				currentData.actionSlot=nil
 			end
 			changed=true
 		end

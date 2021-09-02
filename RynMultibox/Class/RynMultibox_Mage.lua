@@ -111,6 +111,12 @@ ryn.Dps=function()
 		local mana,noMana=UnitMana("player"),false
 		if not ryn.waitManaRegen or not ryn.ManaLower("player",ryn.startCasting) then
 			ryn.waitManaRegen=false
+			if ryn.dpsCooldownToggle then
+				if ryn.UseTrinkets() then return
+				elseif ryn.GetSpellCooldownByName("Arcane Power")==0 then
+					CastSpellByName("Arcane Power")
+				else ryn.dpsCooldownToggle=false end
+			end
 			if ryn.damageType.frost then
 				if mana>246 then
 					CastSpellByName("Frostbolt")

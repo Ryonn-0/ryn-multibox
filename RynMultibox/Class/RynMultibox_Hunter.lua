@@ -91,9 +91,21 @@ end
 
 ryn.Dps=function()
 	if ryn.GetHostileTarget() then
-		if ryn.damageType.arcane and not ryn.DebuffCheck("target",ryn.debuffMark) then
-			CastSpellByName("Hunter's Mark")
-		elseif ryn.damageType.ranged and IsActionInRange(ryn.autoShotActionSlot)==1 then
+		--if ryn.damageType.arcane and not ryn.DebuffCheck("target",ryn.debuffMark) then
+		--	CastSpellByName("Hunter's Mark")
+		if ryn.damageType.ranged and IsActionInRange(ryn.autoShotActionSlot)==1 then
+			if ryn.dpsCooldownToggle then
+				if ryn.UseTrinkets() then return
+				else
+					local rapidFireActionSlot=ryn.GetActionSlot("Rapid Fire")
+					if rapidFireActionSlot and ryn.IsActionReady(rapidFireActionSlot) then
+						CastSpellByName("Rapid Fire")
+						return
+					else
+						ryn.dpsCooldownToggle=false
+					end
+				end
+			end
 			ryn.RangedDps()
 		elseif ryn.damageType.melee and IsActionInRange(ryn.mongooseBiteActionSlot)==1 then
 			ryn.MeleeDps()

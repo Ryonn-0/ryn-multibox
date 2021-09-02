@@ -15,8 +15,8 @@ local backdropBorderOnly={
 }
 
 mw.window=CreateFrame("Frame",nil,UIParent)
---mw.window:Hide()
-mw.window:Show()
+mw.window:Hide()
+--mw.window:Show()
 mw.window:SetFrameStrata("DIALOG")
 mw.window:SetWidth(200)
 mw.window:SetHeight(120)

@@ -107,6 +107,11 @@ end)
 
 local function Sync(commType)
 	local commData=Serialize(commType)
+	--local commData,chunk=Serialize(commType),""
+	--while commData~="" do
+	--	chunk,commData=ReadChars(commData,250)
+	--	SendAddonMessage("ryn",chunk,"RAID")
+	--end
 	--ryn.Debug("SEND: syncDamageType "..GetTime())
 	SendAddonMessage("ryn",commData,"RAID")
 end

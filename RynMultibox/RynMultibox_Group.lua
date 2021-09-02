@@ -1,7 +1,7 @@
 -- Group management
 
 local nameList={
-	tank={"Harklen","Gaelber","Llanewrynn","Stardancer","Cooperbeard","Dobzse","Obier","Yxon","Amonstenn","Fierileya","Peacebringer","Bendegúz","Pinky","Paladino","Naderius"},
+	tank={"Harklen","Gaelber","Llanewrynn","Stardancer","Cooperbeard","Dobzse","Obier","Yxon","Amonstenn","Fierileya","Peacebringer","Bendegúz","Pinky","Paladino","Naderius","Bugabo"},
 	heal={"Alaniel","Flo","Livia","Hoyt","Myra","Papsajt","Negreanu","Kearlah","Azure","Warrógép","Rhodelya","Blueyes"},
 	multiHeal={
 	"Dreamblast","Skyx","Uyalin","Illumyn", -- Kearlah   (paladino temp tank)
@@ -179,7 +179,7 @@ local function GroupManagementHandler()
 	elseif event=="ACTIONBAR_SLOT_CHANGED" then
 		if arg1 then
 			ryn.ActionSlotUpdate(arg1)
-			ryn.Debug("Action bar event: Slot"..arg1)
+			--ryn.Debug("Action bar event: Slot"..arg1)
 		end
 		-- TODO: This shouldn't be here...
 	end

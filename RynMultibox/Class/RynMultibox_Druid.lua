@@ -115,11 +115,11 @@ end
 
 -- ffMode 1: Applies faerie fire on the current dps target
 -- ffMode 2: Applies faerie fire on tank targets
-ryn.Dps=function(ffMode)
-	if not ryn.IsMoonkin() then
+ryn.Dps=function(ffMode,autoBoomkin)
+	if not ryn.IsMoonkin() and autoBoomkin then
 		CastShapeshiftForm(5)
 	elseif not ryn.IsCastingOrChanelling() then
-		if ffMode==2 and ryn.GetSpellCooldownByName("Faerie Fire")==0 then
+		if ffMode==2 and ryn.damageType.nature and ryn.GetSpellCooldownByName("Faerie Fire")==0 then
 			for target,info in ryn.targetList.tank do
 				local currentTarget=target.."target"
 				if UnitCanAttack("player",currentTarget) and not ryn.DebuffCheck(currentTarget,ryn.debuffFaerieFire) and UnitAffectingCombat(currentTarget) then
@@ -132,9 +132,15 @@ ryn.Dps=function(ffMode)
 			end
 		end
 		if ryn.GetHostileTarget() then
-			if ffMode==1 and not ryn.DebuffCheck("target",ryn.debuffFaerieFire) and IsActionInRange(ryn.faerieFireActionSlot)==1 then
+			if ffMode==1 and ryn.damageType.nature and not ryn.DebuffCheck("target",ryn.debuffFaerieFire) and IsActionInRange(ryn.faerieFireActionSlot)==1 then
 				CastSpellByName("Faerie Fire")
-			elseif ryn.damageType.arcane then
+				return
+			end
+			if ryn.dpsCooldownToggle then
+				if ryn.UseTrinkets() then return
+				else ryn.dpsCooldownToggle=false end
+			end
+			if ryn.damageType.arcane then
 				CastSpellByName("Starfire")
 			elseif ryn.damageType.nature then
 				CastSpellByName("Wrath")
