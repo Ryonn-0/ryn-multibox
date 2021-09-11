@@ -25,6 +25,9 @@ ryn.buffSoulstone="Interface\\Icons\\Spell_Shadow_SoulGem"
 --ryn.precastHpThreshold
 --ryn.dpsCooldownToggle
 
+--ryn.requestedSpell
+--ryn.requestSender
+
 ryn.Debug=function(message,carry)
 	local t,s=type(message),""
 	if message==nil then

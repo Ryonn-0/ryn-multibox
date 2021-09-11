@@ -1,3 +1,24 @@
+local commandList={
+	syncDamageType={name="syncDamageType",id="\1",transmitMode="delayed",data=ryn.damageType,func=function(d)
+		for k,v in pairs(d) do
+			ryn.damageType[k]=v
+			ryn.mainWindow[k.."Enabled"]:SetChecked(v)
+		end
+	end},
+	requestSpell={name="requestSpell",id="\2",transmitMode="instant",func=function(spell,sender) -- param format: string (The requested spell's name)
+		if type(spell)~="string" then return end
+		if ryn.SpellExists(spell) then
+			ryn.requestedSpell=spell
+			ryn.requestSender=sender
+		end
+	end}
+}
+
+local commandListById={}
+for _,commData in pairs(commandList) do
+	commandListById[commData.id]=commData
+end
+
 local function ReadChars(str,chars)
 	return string.sub(str,1,chars),string.sub(str,chars+1,-1)
 end
@@ -60,11 +81,13 @@ local function Decode(data)
 	return var,data
 end
 
-local function Serialize(commType)
-	local s
-	if commType=="syncDamageType" then
-		s="\1"
-		s=s..Encode(ryn.damageType)
+local function Serialize(commType,p)
+	local s,data
+	local comm=commandList[commType]
+	if comm then
+		s=comm.id
+		data=comm.data or p
+		s=s..Encode(data)
 	else
 		ryn.Debug("Unknown command type.")
 	end
@@ -73,12 +96,13 @@ local function Serialize(commType)
 end
 
 local function Deserialize(s)
-	local commType,data
-	commType,s=ReadChars(s,1)
-	if commType=="\1" then
+	local commId,data,comm
+	commId,s=ReadChars(s,1)
+	comm=commandListById[commId]
+	if comm then
 		data,s=Decode(s)
 		if string.len(s)==0 then
-			return "syncDamageType",data
+			return comm.name,data,comm.func
 		end
 		ryn.Debug("Something went wrong with deserialization.")
 		return
@@ -87,26 +111,21 @@ local function Deserialize(s)
 end
 
 local snycPending=nil
+local snycParam=nil
 
 local commFrame=CreateFrame("Frame")
 commFrame:RegisterEvent("CHAT_MSG_ADDON")
 commFrame:SetScript("OnEvent",function()
 	if arg1~="ryn" or UnitName("player")==arg4 then return end
 	-- TODO: Character validation
-	local commType,data=Deserialize(arg2)
+	local commType,data,func=Deserialize(arg2)
 	if syncPending==commType then return end
 	--ryn.Debug("RECV: "..commType.." "..GetTime())
-	
-	if commType=="syncDamageType" then
-		for k,v in pairs(data) do
-			ryn.damageType[k]=v
-			ryn.mainWindow[k.."Enabled"]:SetChecked(v)
-		end
-	end
+	func(data,arg4)
 end)
 
-local function Sync(commType)
-	local commData=Serialize(commType)
+local function Sync(commType,p)
+	local commData=Serialize(commType,p)
 	--local commData,chunk=Serialize(commType),""
 	--while commData~="" do
 	--	chunk,commData=ReadChars(commData,250)
@@ -123,16 +142,19 @@ timerFrame:Hide()
 timerFrame:SetScript("OnUpdate",function()
 	elapsed=elapsed+arg1
 	if elapsed>=syncDelay then
-		Sync(syncPending)
+		Sync(syncPending,snycParam)
 		timerFrame:Hide()
 		syncPending=nil
+		syncParam=nil
 	end
 end)
 
-ryn.Sync=function(commType)
-	if syncPending~=commType then
-		if syncPending then Sync(syncPending) end
+ryn.Sync=function(commType,p)
+	if commandList[commType].transmitMode=="instant" then Sync(commType,p) return end
+	if syncPending~=commType then --transmitMode=="delayed"
+		if syncPending then Sync(syncPending,snycParam) end
 		syncPending=commType
+		syncParam=p
 	end
 	elapsed=0
 	timerFrame:Show()

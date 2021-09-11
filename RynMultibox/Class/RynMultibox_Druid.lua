@@ -10,7 +10,7 @@ ryn.debuffFaerieFire="Interface\\Icons\\Spell_Nature_FaerieFire"
 --ryn.buffBearForm="Interface\\Icons\\Ability_Racial_BearForm"
 --ryn.buffAquaticForm="Interface\\Icons\\Ability_Druid_AquaticForm"
 
-ryn.druidDispelRange="Thorns"
+ryn.druidDispelRange="Thorns(Rank 1)"
 ryn.faerieFireActionSlot=10
 
 ryn.ClassEventHandler=function()
@@ -113,12 +113,47 @@ ryn.Dispel=function(lTargetList,dispelTypes,moonkinSwap)
 	end
 end
 
+local function RequestHandler()
+	local sender=ryn.GetGroupIdByName(ryn.requestSender)
+	if not sender then SendChatMessage("Unknown player!","SAY")
+	elseif ryn.requestedSpell=="Innervate" then
+		local cd,dur=ryn.GetSpellCooldownByName(ryn.requestedSpell)
+		if cd>=3 then
+			SendChatMessage(ryn.requestedSpell.." is on cooldown! ("..math.ceil(cd+dur-GetTime()).." s)","SAY")
+		else
+			if UnitMana("player")<62 then return true end -- wait for mana
+			CastSpellByName(ryn.druidDispelRange)
+			if ryn.IsValidSpellTarget(sender) then
+				if ryn.IsMoonkin() then
+					SpellStopTargeting()
+					CastShapeshiftForm(5)
+				elseif cd==0 then
+					CastSpellByName("Innervate")
+					SpellTargetUnit(sender)
+					SendChatMessage(ryn.requestedSpell.." used on "..ryn.requestSender.."!","SAY")
+					ryn.requestedSpell=nil
+					ryn.requestSender=nil
+				end
+				return true
+			else
+				SendChatMessage("Target is out of range, dead or mind controlled!","SAY")
+				SpellStopTargeting()
+			end
+		end
+	else
+		SendChatMessage("Unknown/unsupported spell!","SAY")
+	end
+	ryn.requestedSpell=nil
+	ryn.requestSender=nil
+end
+
 -- ffMode 1: Applies faerie fire on the current dps target
 -- ffMode 2: Applies faerie fire on tank targets
 ryn.Dps=function(ffMode,autoBoomkin)
-	if not ryn.IsMoonkin() and autoBoomkin then
-		CastShapeshiftForm(5)
-	elseif not ryn.IsCastingOrChanelling() then
+	if not ryn.IsCastingOrChanelling() then
+		if ryn.requestedSpell then
+			if RequestHandler() then return end
+		end
 		if ffMode==2 and ryn.damageType.nature and ryn.GetSpellCooldownByName("Faerie Fire")==0 then
 			for target,info in ryn.targetList.tank do
 				local currentTarget=target.."target"
@@ -131,7 +166,9 @@ ryn.Dps=function(ffMode,autoBoomkin)
 				end
 			end
 		end
-		if ryn.GetHostileTarget() then
+		if not ryn.IsMoonkin() and autoBoomkin then
+			CastShapeshiftForm(5)
+		elseif ryn.GetHostileTarget() then
 			if ffMode==1 and ryn.damageType.nature and not ryn.DebuffCheck("target",ryn.debuffFaerieFire) and IsActionInRange(ryn.faerieFireActionSlot)==1 then
 				CastSpellByName("Faerie Fire")
 				return

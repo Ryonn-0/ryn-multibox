@@ -102,6 +102,15 @@ ryn.GetGroupId=function(uid)
 	return nil
 end
 
+ryn.GetGroupIdByName=function(name)
+	for target,info in pairs(ryn.targetList.all) do
+		if info.name==name then
+			return target
+		end
+	end
+	return nil
+end
+
 local function RegisterUnit(isRaid,raidOrUnitId)
 	local uid
 	if isRaid then
