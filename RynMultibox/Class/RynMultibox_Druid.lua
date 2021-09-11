@@ -117,8 +117,11 @@ local function RequestHandler()
 	local sender=ryn.GetGroupIdByName(ryn.requestSender)
 	if not sender then SendChatMessage("Unknown player!","SAY")
 	elseif ryn.requestedSpell=="Innervate" then
+		local _,class=UnitClass(sender)
 		local cd,dur=ryn.GetSpellCooldownByName(ryn.requestedSpell)
-		if cd>=3 then
+		if class=="WARRIOR" or class=="ROGUE" then
+			SendChatMessage("Bad "..ryn.requestSender.."! No "..ryn.requestedSpell.." for you!","SAY")
+		elseif cd>=3 then
 			SendChatMessage(ryn.requestedSpell.." is on cooldown! ("..math.ceil(cd+dur-GetTime()).." s)","SAY")
 		else
 			if UnitMana("player")<62 then return true end -- wait for mana
