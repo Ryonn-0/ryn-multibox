@@ -114,30 +114,31 @@ ryn.Dispel=function(lTargetList,dispelTypes,moonkinSwap)
 end
 
 local function RequestHandler()
-	local sender=ryn.GetGroupIdByName(ryn.requestSender)
-	if not sender then SendChatMessage("Unknown player!","SAY")
+	local sender,ct=ryn.GetGroupIdByName(ryn.requestSender),GetTime()
+	if ct-ryn.requestReceived>=15 then SendChatMessage("Request timeout!","SAY")
+	elseif UnitIsDeadOrGhost("player") then SendChatMessage("I'm dead!","SAY")
+	elseif not sender then SendChatMessage("Unknown player!","SAY")
 	elseif ryn.requestedSpell=="Innervate" then
 		local _,class=UnitClass(sender)
-		local cd,dur=ryn.GetSpellCooldownByName(ryn.requestedSpell)
+		local st,dur=ryn.GetSpellCooldownByName(ryn.requestedSpell)
 		if class=="WARRIOR" or class=="ROGUE" then
 			SendChatMessage("Bad "..ryn.requestSender.."! No "..ryn.requestedSpell.." for you!","SAY")
-		elseif cd>=3 then
-			SendChatMessage(ryn.requestedSpell.." is on cooldown! ("..math.ceil(cd+dur-GetTime()).." s)","SAY")
+		elseif st+dur-ct>=3 then
+			SendChatMessage(ryn.requestedSpell.." is on cooldown! ("..math.ceil(st+dur-ct).." s)","SAY")
 		else
 			if UnitMana("player")<62 then return true end -- wait for mana
+			if ryn.GetSpellCooldownByName(ryn.druidDispelRange)~=0 then return true end
 			CastSpellByName(ryn.druidDispelRange)
 			if ryn.IsValidSpellTarget(sender) then
 				if ryn.IsMoonkin() then
 					SpellStopTargeting()
 					CastShapeshiftForm(5)
-				elseif cd==0 then
+					return true
+				elseif st==0 then
 					CastSpellByName("Innervate")
 					SpellTargetUnit(sender)
 					SendChatMessage(ryn.requestedSpell.." used on "..ryn.requestSender.."!","SAY")
-					ryn.requestedSpell=nil
-					ryn.requestSender=nil
 				end
-				return true
 			else
 				SendChatMessage("Target is out of range, dead or mind controlled!","SAY")
 				SpellStopTargeting()
@@ -148,6 +149,7 @@ local function RequestHandler()
 	end
 	ryn.requestedSpell=nil
 	ryn.requestSender=nil
+	ryn.requestReceived=nil
 end
 
 -- ffMode 1: Applies faerie fire on the current dps target

@@ -8,8 +8,14 @@ local commandList={
 	requestSpell={name="requestSpell",id="\2",transmitMode="instant",func=function(spell,sender) -- param format: string (The requested spell's name)
 		if type(spell)~="string" then return end
 		if ryn.SpellExists(spell) then
-			ryn.requestedSpell=spell
-			ryn.requestSender=sender
+			if not ryn.requestedSpell or GetTime()-ryn.requestReceived>=15 then
+				ryn.requestedSpell=spell
+				ryn.requestSender=sender
+				ryn.requestReceived=GetTime()
+				SendChatMessage("Request received!","SAY")
+			else
+				SendChatMessage("Another spell request is currently active! (Timeout in "..math.ceil(ryn.requestReceived+15-GetTime()).." s)","SAY")
+			end
 		end
 	end}
 }

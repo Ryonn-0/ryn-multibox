@@ -27,6 +27,7 @@ ryn.buffSoulstone="Interface\\Icons\\Spell_Shadow_SoulGem"
 
 --ryn.requestedSpell
 --ryn.requestSender
+--ryn.requestReceived
 
 ryn.Debug=function(message,carry)
 	local t,s=type(message),""
