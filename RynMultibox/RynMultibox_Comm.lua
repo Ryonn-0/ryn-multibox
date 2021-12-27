@@ -1,3 +1,5 @@
+local ryn=ryn
+
 local commandList={
 	syncDamageType={name="syncDamageType",id="\1",transmitMode="delayed",data=ryn.damageType,func=function(d)
 		for k,v in pairs(d) do
@@ -116,8 +118,7 @@ local function Deserialize(s)
 	ryn.Debug("Unknown command type.")
 end
 
-local snycPending=nil
-local snycParam=nil
+local syncPending={}
 
 local commFrame=CreateFrame("Frame")
 commFrame:RegisterEvent("CHAT_MSG_ADDON")
@@ -125,43 +126,20 @@ commFrame:SetScript("OnEvent",function()
 	if arg1~="ryn" or UnitName("player")==arg4 then return end
 	-- TODO: Character validation
 	local commType,data,func=Deserialize(arg2)
-	if syncPending==commType then return end
+	if ryn.IsActiveTimer(syncPending[commType]) then return end
 	--ryn.Debug("RECV: "..commType.." "..GetTime())
 	func(data,arg4)
 end)
 
-local function Sync(commType,p)
-	local commData=Serialize(commType,p)
-	--local commData,chunk=Serialize(commType),""
-	--while commData~="" do
-	--	chunk,commData=ReadChars(commData,250)
-	--	SendAddonMessage("ryn",chunk,"RAID")
-	--end
-	--ryn.Debug("SEND: syncDamageType "..GetTime())
+local function Sync(args)
+	local commData=Serialize(args.commType,args.p)
 	SendAddonMessage("ryn",commData,"RAID")
 end
 
-local syncDelay=0.5
-local elapsed=0
-local timerFrame=CreateFrame("Frame")
-timerFrame:Hide()
-timerFrame:SetScript("OnUpdate",function()
-	elapsed=elapsed+arg1
-	if elapsed>=syncDelay then
-		Sync(syncPending,snycParam)
-		timerFrame:Hide()
-		syncPending=nil
-		syncParam=nil
-	end
-end)
-
 ryn.Sync=function(commType,p)
-	if commandList[commType].transmitMode=="instant" then Sync(commType,p) return end
-	if syncPending~=commType then --transmitMode=="delayed"
-		if syncPending then Sync(syncPending,snycParam) end
-		syncPending=commType
-		syncParam=p
+	if commandList[commType].transmitMode=="instant" then
+		Sync({commType=commType,p=p})
+	else --transmitMode=="delayed"
+		syncPending[commType]=ryn.Timer(0.5,Sync,{commType=commType,p=p},syncPending[commType],2)
 	end
-	elapsed=0
-	timerFrame:Show()
 end

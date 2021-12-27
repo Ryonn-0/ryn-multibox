@@ -1,4 +1,5 @@
 if ryn.playerClass=="HUNTER" then
+local ryn=ryn
 
 ryn.buffHawk="Interface\\Icons\\Spell_Nature_RavenForm"
 ryn.buffTrueshot="Interface\\Icons\\Ability_TrueShot"

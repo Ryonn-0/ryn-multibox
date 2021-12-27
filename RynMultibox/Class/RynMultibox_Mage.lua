@@ -1,15 +1,19 @@
 if ryn.playerClass=="MAGE" then
+local ryn=ryn
 
 ryn.buff={}
---ryn.buffIceBlock="Interface\\Icons\\Spell_Frost_Frost"
-ryn.buff["Mage Armor"]="Interface\\Icons\\Spell_MageArmor"
-ryn.buff["Arcane Brilliance"]="Interface\\Icons\\Spell_Holy_ArcaneIntellect"
-ryn.buff["Arcane Intellect"]="Interface\\Icons\\Spell_Holy_MagicalSentry"
+local buff=ryn.buff
+buff["Ice Block"]="Interface\\Icons\\Spell_Frost_Frost"
+buff["Mage Armor"]="Interface\\Icons\\Spell_MageArmor"
+buff["Arcane Brilliance"]="Interface\\Icons\\Spell_Holy_ArcaneIntellect"
+buff["Arcane Intellect"]="Interface\\Icons\\Spell_Holy_MagicalSentry"
 
-ryn.debuffPolymorph="Interface\\Icons\\Spell_Nature_Polymorph"
+ryn.debuff={}
+local debuff=ryn.debuff
+ryn.debuff["Polymorph"]="Interface\\Icons\\Spell_Nature_Polymorph"
 
 ryn.dispelRange="Remove Lesser Curse"
-ryn.startCasting=0.15
+ryn.startCasting=0.2
 
 ryn.ClassActionSlotInit=function()
 	ryn.wandActionSlot=ryn.GetActionSlot("Shoot")
@@ -54,23 +58,27 @@ ryn.CCPlayer=function()
 	if target then
 		if not UnitCanAttack("player",target) then
 			ryn.currentPolyTarget=nil
-		elseif not ryn.DebuffCheck(target,ryn.debuffPolymorph) then
+		elseif not ryn.DebuffCheck(target,debuff["Polymorph"]) then
 			TargetUnit(target)
 			if IsActionInRange(ryn.polymorphActionSlot)==1 then
 				CastSpellByName("Polymorph")
-				ryn.Debug("Poly: "..info.name)
+				--ryn.Debug("Poly: "..UnitName(target))
 			end
+		-- TODO: NOT WORKING PROPERLY, need to do some testing
+		elseif ryn.IsCastingOrChanelling() and CastingBarText:GetText()=="Polymorph" then
+			SpellStopCasting()
+			--ryn.stopCastingDelayExpire=GetTime()+ryn.stopCastingDelayreturn
 			return
 		end
 	end
 	for target,info in ryn.targetList.all do
-		if UnitCanAttack("player",target) and not ryn.IsBlacklisted(target) and not ryn.DebuffCheck(target,ryn.debuffPolymorph) then
+		if UnitCanAttack("player",target) and not ryn.IsBlacklisted(target) and not ryn.DebuffCheck(target,debuff["Polymorph"]) then
 			TargetUnit(target)
 			if IsActionInRange(ryn.polymorphActionSlot)==1 then
 				ryn.currentHealTarget=target
 				ryn.currentPolyTarget=target -- Fixate on a target, until the mind control expires.
 				CastSpellByName("Polymorph")
-				ryn.Debug("Poly: "..info.name)
+				SendChatMessage("Poly: "..info.name,"SAY")
 			end
 		end
 	end
@@ -79,16 +87,23 @@ end
 ryn.Buff=function(lTargetList)
 	lTargetList=lTargetList or ryn.targetList.all
 	if not ryn.IsCastingOrChanelling() then
-		if not ryn.BuffCheck("player",ryn.buff["Mage Armor"]) then
+		if not ryn.BuffCheck("player",buff["Mage Armor"]) then
 			CastSpellByName("Mage Armor")
 			return
 		end
 		ryn.ClearFriendlyTarget()
 		CastSpellByName("Arcane Intellect")
-		for i=1,8 do
+		if not SpellIsTargeting() then return end
+		local groups={}
+		if UnitInRaid("player") then
+			for i=1,8 do groups["group"..i]=true end
+		else
+			groups["party"]=true
+		end
+		for group,_ in groups do
 			local count,buffTarget=0,nil
-			for target,info in pairs(ryn.targetList["group"..i]) do
-				if not ryn.BuffCheck(target,ryn.buff["Arcane Brilliance"]) and not ryn.BuffCheck(target,ryn.buff["Arcane Intellect"]) and info.class~="WARRIOR" and info.class~="ROGUE" and ryn.IsValidSpellTarget(target) then
+			for target,info in pairs(ryn.targetList[group]) do
+				if not ryn.BuffCheck(target,buff["Arcane Brilliance"]) and not ryn.BuffCheck(target,buff["Arcane Intellect"]) and info.class~="WARRIOR" and info.class~="ROGUE" and ryn.IsValidSpellTarget(target) then
 					count=count+1
 					buffTarget=target
 				end

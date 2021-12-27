@@ -1,12 +1,13 @@
+local ryn=ryn
 -- Group management
 
 local nameList={
-	tank={"Harklen","Gaelber","Llanewrynn","Stardancer","Cooperbeard","Dobzse","Obier","Yxon","Amonstenn","Fierileya","Peacebringer","Bendegúz","Pinky","Paladino","Naderius","Bugabo"},
-	heal={"Alaniel","Flo","Livia","Hoyt","Myra","Papsajt","Negreanu","Kearlah","Azure","Warrógép","Rhodelya","Blueyes"},
+	tank={"Harklen","Gaelber","Llanewrynn","Stardancer","Cooperbeard","Dobzse","Obier","Yxon","Fierileya","Bendegúz","Pinky","Naderius","Bugabo","Peacebringer"},
+	heal={"Alaniel","Flo","Livia","Hoyt","Myra","Papsajt","Negreanu","Kearlah","Azure","Warrógép","Rhodelya","Blueyes","Erutan"}, -- Erutan temp
 	multiHeal={
-	"Dreamblast","Skyx","Uyalin","Illumyn", -- Kearlah   (paladino temp tank)
+	"Dreamblast","Skyx","Uyalin","Illumyn","Paladino", -- Kearlah
 	"Baleog","Lionel","Nobleforged","Lightbeard","Moonflower","Bronzecoat", -- Azsgrof
-	"Pamelma" -- Dobzse
+	"Pamelma","Amonstenn" -- Dobzse
 	},
 	multiDps={
 	"Dorothy","Tygerra","Havox","Eoro","Livingbomb","Dorkilla","Reimus","Necropoly","Vibranium","Lazarrus","Skyfire", -- Kearlah

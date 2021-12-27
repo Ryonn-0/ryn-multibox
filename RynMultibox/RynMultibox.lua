@@ -1,11 +1,13 @@
 ryn={} -- Addon scope
+local ryn=ryn
 
 -- Settings
+ryn.myChars={"Harklen","Alaniel","Ryonn","Arvene","Seloris","Nymira","Inochi"}
 ryn.masterName="Harklen"
 ryn.dpsMode=1
 -- 1: Skull/cross targeting
 -- 2: Master assist targeting (with skull/cross target lock if applied)
-ryn.precastInterruptWindow=1
+ryn.precastInterruptWindow=0.5
 ryn.healHpThreshold=0.9
 ryn.healInterruptThreshold=0.95
 ryn.stopCastingDelay=0.5
@@ -29,7 +31,7 @@ ryn.buffSoulstone="Interface\\Icons\\Spell_Shadow_SoulGem"
 --ryn.requestSender
 --ryn.requestReceived
 
-ryn.Debug=function(message,carry)
+local Debug=function(message,carry)
 	local t,s=type(message),""
 	if message==nil then
 		s=s.."nil"
@@ -49,6 +51,10 @@ ryn.Debug=function(message,carry)
 	end
 	if carry then return s
 	else DEFAULT_CHAT_FRAME:AddMessage(s) end
+end
+
+ryn.Debug=function(message)
+	Debug(message,false)
 end
 
 ryn.GetSpellSlot=function(texture)
@@ -261,6 +267,7 @@ end
 ryn.BuffCheck=function(target,buff)
 	local i=1
 	while UnitBuff(target,i)~=nil do
+		--ryn.Debug(UnitBuff(target,i))
 		if buff==UnitBuff(target,i) then
 			return true
 		end
@@ -359,15 +366,18 @@ ryn.SSCheck=function(lTargetList)
 end
 
 ryn.EquipItemByItemLink=function(itemLink,invSlotId)
+	if not itemLink then return false end
 	for bag=0,4 do
 		for slot=1,GetContainerNumSlots(bag) do
 			local item=GetContainerItemLink(bag,slot)
 			if item==itemLink then
 				PickupContainerItem(bag,slot)
 				EquipCursorItem(invSlotId)
+				return true
 			end
 		end
 	end
+	return false
 end
 
 ryn.UnequipItemBySlotId=function(invSlotId)
@@ -407,4 +417,102 @@ ryn.SmartReload=function()
 	else
 		ryn.MinimalMode()
 	end
+end
+
+-- Universal timer
+
+-- Node: {tick,func,args,next,prev,maxTick,valid}
+
+local nextTick=nil
+local head=nil
+
+local function Sink(start,new)
+	local prev,node=start,start.next
+	while node and node.tick<new.tick do
+		prev,node=node,node.next
+	end
+	new.prev,new.next,prev.next=prev,node,new
+	if node then
+		node.prev=new
+	end
+end
+
+local elapsed=0
+local timerFrame=CreateFrame("Frame")
+timerFrame:Hide()
+timerFrame:SetScript("OnUpdate",function()
+	elapsed=elapsed+arg1
+	while elapsed>=nextTick do
+		head.func(head.args)
+		head.valid=nil
+		head=head.next
+		if head then
+			nextTick=head.tick
+			head.prev=nil
+			--ryn.Debug("More stuff to do")
+		else
+			timerFrame:Hide()
+			--ryn.Debug("Done")
+			nextTick=nil
+			return
+		end
+	end
+end)
+
+local TimerNodeCount=function()
+	local node,count=head,0
+	while node do
+		node=node.next
+		count=count+1
+	end
+	return count
+end
+
+ryn.Timer=function(delay,func,args,refTimer,maxDelay)
+	local t=GetTime()
+	if not refTimer or not refTimer.valid then
+		local thisTick,maxTick=t+delay,t+(maxDelay or delay)
+		local newNode={tick=thisTick,func=func,args=args,maxTick=maxTick,valid=true}
+		--ryn.Debug("Timer call")
+		if not head then
+			head=newNode
+			nextTick=thisTick
+			elapsed=t
+			timerFrame:Show()
+			--ryn.Debug("Add head")
+		elseif head.tick>=thisTick then
+			head.prev=newNode
+			newNode.next=head
+			head=newNode
+			nextTick=thisTick
+			--ryn.Debug("New head")
+		else
+			Sink(head,newNode)
+			--ryn.Debug("New sink")
+		end
+		--ryn.Debug(TimerNodeCount())
+		return newNode
+	else
+		--ryn.Debug("Sync timer call")
+		refTimer.func,refTimer.args=func,args
+		if refTimer.tick~=refTimer.maxTick then
+			local thisTick=t+delay
+			if thisTick>refTimer.maxTick then thisTick=refTimer.maxTick end
+			refTimer.tick=thisTick
+			if refTimer.next and thisTick>refTimer.next.tick then
+				refTimer.next.prev=refTimer.prev
+				if refTimer.prev then refTimer.prev.next=refTimer.next end
+				if refTimer==head then head=refTimer.next end
+				Sink(refTimer.next,refTimer)
+				--ryn.Debug("RefTimer Sink")
+			end
+			nextTick=head.tick
+		end
+		--ryn.Debug(TimerNodeCount())
+		return refTimer
+	end
+end
+
+ryn.IsActiveTimer=function(refTimer)
+	return refTimer and refTimer.valid
 end

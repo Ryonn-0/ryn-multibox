@@ -1,3 +1,5 @@
+local ryn=ryn
+
 ryn.mainWindow={}
 local mw=ryn.mainWindow
 

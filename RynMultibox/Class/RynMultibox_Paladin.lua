@@ -1,4 +1,5 @@
 if ryn.playerClass=="PALADIN" then
+local ryn=ryn
 
 ryn.buffMight="Interface\\Icons\\Spell_Holy_FistOfJustice"
 ryn.buffWisdom="Interface\\Icons\\Spell_Holy_SealOfWisdom"
@@ -147,9 +148,9 @@ ryn.HealTarget=function(healProfile,target,hp)
 					if ryn.CheckRaidIcon("target",8) or ryn.CheckRaidIcon("target",7) or ryn.TryTargetRaidIcon(8,10,true) or ryn.TryTargetRaidIcon(7,10,true) then
 						local precastTarget=ryn.GetGroupId("targettarget")
 						if precastTarget then
-							--ryn.Debug("Executing heal profile \""..healProfile.."\", entry: "..i)
 							CastSpellByName(spellName)
 							if ryn.IsValidSpellTarget(precastTarget) then
+								--ryn.Debug("Executing heal profile \""..healProfile.."\", entry: "..i)
 								ryn.currentHealTarget=precastTarget
 								ryn.precastHpThreshold=hpThreshold
 								SpellTargetUnit(ryn.currentHealTarget)

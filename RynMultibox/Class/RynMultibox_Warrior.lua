@@ -1,4 +1,5 @@
 if ryn.playerClass=="WARRIOR" then
+local ryn=ryn
 
 --ryn.autoAttackActionSlot=81
 --ryn.heroicStrikeActionSlot=85

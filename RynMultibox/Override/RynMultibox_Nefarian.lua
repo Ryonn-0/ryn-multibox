@@ -1,8 +1,11 @@
+local ryn=ryn
+
 ryn.override.nefarian={}
 ryn.overrideLocal.nefarian={}
 local nefOverride=ryn.override.nefarian
 local nef=ryn.overrideLocal.nefarian
 
+nef.aggroPrefix="Let the"
 nef.engagePrefix="Well done"
 nef.classCallPrefixes={
 	druid="Druids",hunter="Hunters",mage="Mages",priest="Priests",paladin="Paladins",
@@ -71,39 +74,44 @@ elseif ryn.playerClass=="HUNTER" then
 	nef.overrideEvents={"CHAT_MSG_MONSTER_YELL"}
 	nef.nextCall=nil
 	nef.itemLink=GetInventoryItemLink("player",18)
-	nef.unequipTime=2.5
-	nef.reequipTime=1
-	nef.timeoutTime=5
+	nef.unequipTime=1.5
+	nef.reequipTime=0.5
+	--nef.timeoutTime=1
+	nef.Equip=function()
+		local equipped=GetInventoryItemLink("player",18)
+		nef.itemLink=equipped or nef.itemLink
+		if not equipped then
+			ryn.Debug("NOT EQUIPPED")
+			if not ryn.EquipItemByItemLink(nef.itemLink,18) then
+				SendChatMessage("Equip a ranged weapon!","SAY")
+				ryn.Debug("FAILED TO EQUIP")
+			end
+		end
+	end
 	nefOverride.ClassEventHandler=function()
 		ryn.default.ClassEventHandler()
 		if event=="CHAT_MSG_MONSTER_YELL" then
-			if string.find(arg1,nef.engagePrefix,1,1) then
-				nef.nextCall=GetTime()+35 -- Not sure about this value
+			ryn.Debug("YELL")
+			if string.find(arg1,nef.aggroPrefix,1,1) then
+				ryn.Debug("AGGRO")
+				nef.Equip()
+			elseif string.find(arg1,nef.engagePrefix,1,1) then
+				ryn.Debug("ENGAGE")
+				nef.Equip()
+				ryn.Timer(35-nef.unequipTime,ryn.UnequipItemBySlotId,18) -- Not sure about this value
 			else
 				local called=false
 				for _,callPrefix in nef.classCallPrefixes do
 					called=string.find(arg1,callPrefix,1,1)
 					if called then
-						nef.nextCall=GetTime()+25
+						--ryn.Timer(35+nef.timeoutTime,nef.Equip)
+						ryn.Debug("CALL")
+						ryn.Timer(25-nef.unequipTime,ryn.UnequipItemBySlotId,18)
+						ryn.Timer(nef.reequipTime,nef.Equip)
 						break
 					end
 				end
 			end
 		end
-	end
-	nefOverride.Dps=function()
-		if nef.nextCall then
-			local t=GetTime()
-			nef.itemLink=GetInventoryItemLink("player",18) or nef.itemLink
-			if nef.nextCall+10+nef.timeoutTime<=t then
-				ryn.EquipItemByItemLink(nef.itemLink,18)
-				nef.nextCall=nil
-			elseif nef.nextCall-nef.unequipTime<=t then
-				ryn.UnequipItemBySlotId(18)
-			elseif nef.nextCall-25+nef.reequipTime<=t then
-				ryn.EquipItemByItemLink(nef.itemLink,18)
-			end
-		end
-		ryn.default.Dps()
 	end
 end

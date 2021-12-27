@@ -1,4 +1,5 @@
 if ryn.playerClass=="WARLOCK" then
+local ryn=ryn
 
 ryn.buffDemon="Interface\\Icons\\Spell_Shadow_RagingScream"
 ryn.buffFire="Interface\\Icons\\Spell_Fire_FireArmor"
@@ -45,7 +46,7 @@ ryn.Buff=function(lTargetList)
 end
 
 ryn.CC=function()
-	if not ryn.IsCastingOrChanelling() and ryn.TryTargetRaidIcon(5,10,true) then
+	if not ryn.IsCastingOrChanelling() and ryn.TryTargetRaidIcon(5,10,true) then -- 5
 		local unitType,mana=UnitCreatureType("target"),UnitMana("player")
 		if mana>=200 and (unitType=="Elemental" or unitType=="Demon") then
 			CastSpellByName("Banish")

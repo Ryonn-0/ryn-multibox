@@ -1,3 +1,4 @@
+local ryn=ryn
 -- Spell management
 
 local invSlotName={"Head","Neck","Shoulder","Shirt","Chest","Waist","Legs","Feet","Wrist","Hands",
@@ -180,12 +181,15 @@ ryn.ActionSlotUpdate=function(slot,isInit)
 			if IsEquippedAction(slot) then
 				--ryn.Debug("Equipped: "..slot)
 				for i=1,18 do
-					local _,_,itemName=string.find(GetInventoryItemLink("player",i),"%[(.*)%]")
-					if itemName==name then
-						local currentInvSlot=invSlotName[i]
-						itemData[currentInvSlot]={actionType="Equipped",invSlot=currentInvSlot,itemName=name,actionSlot=slot}
-						actionData[slot]=itemData[currentInvSlot]
-						break
+					local itemName=GetInventoryItemLink("player",i)
+					if itemName then
+						_,_,itemName=string.find(GetInventoryItemLink("player",i),"%[(.*)%]")
+						if itemName==name then
+							local currentInvSlot=invSlotName[i]
+							itemData[currentInvSlot]={actionType="Equipped",invSlot=currentInvSlot,itemName=name,actionSlot=slot}
+							actionData[slot]=itemData[currentInvSlot]
+							break
+						end
 					end
 				end
 			elseif IsConsumableAction(slot) then
